@@ -1,70 +1,190 @@
+-- ILhub Ultimate - Full Combined Script
+if not game:IsLoaded() then game.Loaded:Wait() end
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Voidware | ILhub Ultimate",
-   LoadingTitle = "Loading...",
+   LoadingTitle = "Loading All Systems...",
    LoadingSubtitle = "by ilay and liran",
-   ConfigurationSaving = { Enabled = false }
+   ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
 
+-- משתנים גלובליים
 local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local selectedPlayer = ""
+local flySpeed = 50
+local flying = false
+local noclip = false
 
--- טאב שיגור
+-- פונקציה לעדכון רשימת השחקנים
+local function getPlayersList()
+    local pTable = {}
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then table.insert(pTable, p.Name) end
+    end
+    return pTable
+end
+
+-- יצירת טאבים
+local MovementTab = Window:CreateTab("Movement", 4483345998)
+local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
-TeleportTab:CreateSection("Select a Player")
+--- MOVEMENT TAB ---
+MovementTab:CreateSection("Character Physicals")
+MovementTab:CreateSlider({
+   Name = "Walk Speed",
+   Range = {16, 1000},
+   Increment = 1,
+   CurrentValue = 16,
+   Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end,
+})
+MovementTab:CreateSlider({
+   Name = "Jump Power",
+   Range = {0, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(v) 
+      if player.Character then 
+         player.Character.Humanoid.UseJumpPower = true
+         player.Character.Humanoid.JumpPower = v 
+      end 
+   end,
+})
+
+MovementTab:CreateSection("Flight")
+MovementTab:CreateToggle({
+   Name = "Fly (W,A,S,D)",
+   CurrentValue = false,
+   Callback = function(state)
+      flying = state
+      if flying and player.Character then
+         local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+         local bv = Instance.new("BodyVelocity", hrp)
+         bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+         task.spawn(function()
+            while flying do
+               local cam = workspace.CurrentCamera.CFrame
+               local dir = Vector3.new(0, 0.1, 0)
+               if UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cam.LookVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cam.LookVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cam.RightVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + cam.RightVector * flySpeed end
+               bv.Velocity = dir
+               task.wait()
+            end
+            bv:Destroy()
+         end)
+      end
+   end,
+})
+MovementTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {0, 1000},
+   CurrentValue = 50,
+   Callback = function(v) flySpeed = v end,
+})
+
+--- VISUALS TAB ---
+VisualsTab:CreateSection("ESP Settings")
+VisualsTab:CreateToggle({
+   Name = "Red ESP Highlight",
+   CurrentValue = false,
+   Callback = function(state)
+      if state then
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= player and p.Character then 
+               local h = Instance.new("Highlight", p.Character)
+               h.FillColor = Color3.fromRGB(255,0,0)
+               h.Name = "ILhub_ESP"
+            end
+         end
+      else
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
+         end
+      end
+   end,
+})
+
+--- TELEPORT TAB (With Skin Preview Fix) ---
+TeleportTab:CreateSection("Teleport Menu")
+
+-- תווית סטטוס כדי לראות מי נבחר בתוך התפריט
+local StatusLabel = TeleportTab:CreateLabel("Selected Player: None")
 
 local PlayerDropdown = TeleportTab:CreateDropdown({
-   Name = "Choose Target",
-   Options = (function()
-      local t = {}
-      for _, p in pairs(game.Players:GetPlayers()) do
-         if p ~= player then table.insert(t, p.Name) end
-      end
-      return t
-   end)(),
+   Name = "Choose Player",
+   Options = getPlayersList(),
    Callback = function(Option)
       selectedPlayer = type(Option) == "table" and Option[1] or Option
+      StatusLabel:Set("Selected: " .. selectedPlayer .. " (Loading Skin...)")
       
-      -- כאן אנחנו יוצרים את ה"תמונה" בשיטה שעובדת בטוח
       local target = game.Players:FindFirstChild(selectedPlayer)
       if target then
-         local content = game.Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
-         
-         -- הודעה קופצת עם התמונה (תסתכל בפינה הימנית למטה של המסך כשתלחץ!)
-         Rayfield:Notify({
-            Title = "Skin Preview: " .. selectedPlayer,
-            Content = "You selected " .. selectedPlayer,
-            Duration = 5,
-            Image = content
-         })
+         task.spawn(function()
+            -- משיכת תמונת הסקין מהשרתים של רובלוקס
+            local content, isReady = game.Players:GetUserThumbnailAsync(
+               target.UserId, 
+               Enum.ThumbnailType.HeadShot, 
+               Enum.ThumbnailSize.Size420x420
+            )
+            
+            -- שליחת ההתראה עם התמונה (תסתכל בפינת המסך!)
+            Rayfield:Notify({
+               Title = "Skin Loaded: " .. selectedPlayer,
+               Content = "Teleport is ready.",
+               Image = content,
+               Duration = 4
+            })
+            StatusLabel:Set("Selected: " .. selectedPlayer .. " (Ready)")
+         end)
       end
    end,
 })
 
 TeleportTab:CreateButton({
-   Name = "Teleport Now",
+   Name = "Teleport to Selected",
    Callback = function()
       local target = game.Players:FindFirstChild(selectedPlayer)
-      if target and target.Character then
-         player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+      if target and target.Character and player.Character then 
+         player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame 
       end
    end,
 })
 
 TeleportTab:CreateButton({
-   Name = "Refresh List",
+   Name = "Refresh Player List",
    Callback = function()
-      local t = {}
-      for _, p in pairs(game.Players:GetPlayers()) do
-         if p ~= player then table.insert(t, p.Name) end
-      end
-      PlayerDropdown:Refresh(t, true)
+      PlayerDropdown:Refresh(getPlayersList(), true)
+      Rayfield:Notify({Title = "System", Content = "Player list updated", Duration = 2})
    end,
 })
 
--- הוספת שאר הטאבים (בקיצור כדי שלא יחסר כלום)
-local MovementTab = Window:CreateTab("Movement", 4483345998)
-MovementTab:CreateSlider({Name = "Speed", Range = {16, 500}, CurrentValue = 16, Callback = function(v) player.Character.Humanoid.WalkSpeed = v end})
-MovementTab:CreateSlider({Name = "Jump", Range = {50, 500}, CurrentValue = 50, Callback = function(v) player.Character.Humanoid.JumpPower = v end})
+--- EXPLOITS TAB ---
+ExploitsTab:CreateSection("Abilities")
+ExploitsTab:CreateToggle({
+   Name = "Noclip",
+   CurrentValue = false,
+   Callback = function(state)
+      noclip = state
+      RunService.Stepped:Connect(function()
+         if noclip and player.Character then
+            for _, v in pairs(player.Character:GetDescendants()) do
+               if v:IsA("BasePart") then v.CanCollide = false end
+            end
+         end
+      end)
+   end,
+})
+
+-- הודעת פתיחה
+Rayfield:Notify({
+   Title = "ILhub V2 Loaded",
+   Content = "Toggle Menu with 'T' (if binded) or use the UI.",
+   Duration = 5
+})
