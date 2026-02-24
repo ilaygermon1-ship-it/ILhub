@@ -3,8 +3,8 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9.6",
-   LoadingTitle = "Fixing Interface...",
+   Name = "Voidware | ILhub Ultimate V9.7",
+   LoadingTitle = "Upgrading Teleport System...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -12,7 +12,6 @@ local Window = Rayfield:CreateWindow({
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local selectedPlayer = ""
 local flySpeed = 50
 local flying = false
 local noclip = false
@@ -33,14 +32,6 @@ local function updateESPColor()
             p.Character.ILhub_ESP.FillColor = espColor
         end
     end
-end
-
-local function getPlayersList()
-    local pTable = {}
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player then table.insert(pTable, p.Name) end
-    end
-    return pTable
 end
 
 -- Tabs
@@ -81,7 +72,6 @@ MovementTab:CreateSlider({
    end,
 })
 
--- יצרתי Section נפרד רק ל-Fly כדי שלא יעלם
 MovementTab:CreateSection("Flight Settings")
 
 MovementTab:CreateSlider({
@@ -156,37 +146,53 @@ VisualsTab:CreateToggle({
    end,
 })
 
--- TELEPORT
-TeleportTab:CreateSection("Player Selection")
-local PlayerDropdown = TeleportTab:CreateDropdown({
-   Name = "Select Target",
-   Options = getPlayersList(),
-   Callback = function(opt)
-      selectedPlayer = type(opt) == "table" and opt[1] or opt
-      local target = game.Players:FindFirstChild(selectedPlayer)
-      if target then
-         task.spawn(function()
-            local content, isReady = game.Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
-            Rayfield:Notify({Title = "Target Selected", Content = selectedPlayer, Image = content, Duration = 3})
-         end)
-      end
-   end,
-})
+-- TELEPORT (המערכת החדשה בלחיצה אחת)
+local function CreateTPButtons()
+    -- מנקה את הטאב לפני יצירה מחדש (למקרה של Refresh)
+    for _, element in pairs(TeleportTab.Elements) do
+        if element.ClassName == "Button" and element.Name ~= "Refresh Player List" then
+            element:Destroy()
+        end
+    end
 
-TeleportTab:CreateButton({
-   Name = "Teleport",
-   Callback = function()
-      local target = game.Players:FindFirstChild(selectedPlayer)
-      if target and target.Character and player.Character then 
-         player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame 
-      end
-   end,
-})
+    TeleportTab:CreateSection("Click to Teleport")
 
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            TeleportTab:CreateButton({
+                Name = "Teleport to: " .. p.DisplayName .. " (@" .. p.Name .. ")",
+                Callback = function()
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+                        Rayfield:Notify({
+                            Title = "Teleport Success",
+                            Content = "Shugart to " .. p.DisplayName,
+                            Duration = 2
+                        })
+                    else
+                        Rayfield:Notify({
+                            Title = "Teleport Failed",
+                            Content = "Player character not found",
+                            Duration = 2
+                        })
+                    end
+                end,
+            })
+        end
+    end
+end
+
+-- יצירה ראשונית של הרשימה
+CreateTPButtons()
+
+TeleportTab:CreateSection("List Controls")
 TeleportTab:CreateButton({
    Name = "Refresh Player List",
    Callback = function()
-      PlayerDropdown:Refresh(getPlayersList(), true)
+       -- ב-Rayfield הדרך הכי טובה לעדכן רשימת כפתורים דינמית היא פשוט להריץ שוב את הפונקציה
+       -- שים לב: חלק מהגרסאות של Rayfield לא תומכות במחיקת כפתורים בזמן ריצה, 
+       -- אם זה קורה, מומלץ להשתמש ב-Dropdown המקורי או להפעיל מחדש את הסקריפט.
+       CreateTPButtons()
    end,
 })
 
@@ -208,7 +214,7 @@ ExploitsTab:CreateToggle({
 })
 
 Rayfield:Notify({
-   Title = "Voidware V9.6",
-   Content = "Fly Speed & Color Picker are now visible!",
+   Title = "Voidware V9.7",
+   Content = "Instant Teleport List Ready!",
    Duration = 5
 })
