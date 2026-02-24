@@ -14,9 +14,9 @@ local function SafeLoad()
     local fs, fly, nc, esp, ij, ec = 50, false, false, false, false, Color3.new(1,0,0)
 
     local Window = R:CreateWindow({
-       Name = "Voidware | ILhub Ultimate V15.3",
-       LoadingTitle = "מיוצר על ידי לירן ואיליי",
-       LoadingSubtitle = "מהירות וקפיצה עד 3000",
+       Name = "Voidware | ILhub Ultimate V15.5",
+       LoadingTitle = "נוצר על ידי לירן ועילאי",
+       LoadingSubtitle = "מהירות וקפיצה עד 3,000",
        ConfigurationSaving = { Enabled = false }
     })
 
@@ -134,7 +134,7 @@ local function SafeLoad()
         end)
     end})
 
-    R:Notify({Title = "Voidware V15.3", Content = "המהירות והקפיצה עודכנו ל-3000!", Duration = 5})
+    R:Notify({Title = "Voidware V15.5", Content = "נוצר על ידי לירן ועילאי - מוכן!", Duration = 5})
 end
 
 SafeLoad()
