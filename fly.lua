@@ -52,7 +52,8 @@ MovementTab:CreateSlider({
       end 
    end,
 })
-MovementTab:CreateSection("Fly")
+
+MovementTab:CreateSection("Fly Controls")
 MovementTab:CreateToggle({
    Name = "Fly (W,A,S,D)",
    CurrentValue = false,
@@ -92,34 +93,64 @@ VisualsTab:CreateToggle({
    Callback = function(state)
       if state then
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= player and p.Character then Instance.new("Highlight", p.Character).FillColor = Color3.fromRGB(255,0,0) end
+            if p ~= player and p.Character then 
+               local h = Instance.new("Highlight", p.Character)
+               h.FillColor = Color3.fromRGB(255,0,0)
+               h.Name = "ILhub_ESP"
+            end
          end
       else
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("Highlight") then p.Character.Highlight:Destroy() end
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
          end
       end
    end,
 })
 
--- TELEPORT (עם תיקון התמונה)
-TeleportTab:CreateDropdown({
+-- TELEPORT (עם תיקון טעינת התמונה)
+TeleportTab:CreateSection("Selection")
+local PlayerDropdown = TeleportTab:CreateDropdown({
    Name = "Select Player",
    Options = getPlayersList(),
    Callback = function(opt)
       selectedPlayer = type(opt) == "table" and opt[1] or opt
       local target = game.Players:FindFirstChild(selectedPlayer)
+      
       if target then
-         local content = game.Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
-         Rayfield:Notify({Title = "Player Skin Loaded", Content = "Target: "..selectedPlayer, Image = content, Duration = 3})
+         -- מנגנון טעינת תמונה בטוח
+         task.spawn(function()
+            local content, isReady = game.Players:GetUserThumbnailAsync(
+               target.UserId, 
+               Enum.ThumbnailType.HeadShot, 
+               Enum.ThumbnailSize.Size150x150
+            )
+            
+            -- שולח הודעה רק כשהתמונה מוכנה
+            Rayfield:Notify({
+               Title = "Target: " .. selectedPlayer,
+               Content = "Skin loaded! Ready to TP.",
+               Image = content,
+               Duration = 4
+            })
+         end)
       end
    end,
 })
+
 TeleportTab:CreateButton({
-   Name = "Teleport",
+   Name = "Teleport Now",
    Callback = function()
       local target = game.Players:FindFirstChild(selectedPlayer)
-      if target and target.Character then player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame end
+      if target and target.Character and player.Character then 
+         player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame 
+      end
+   end,
+})
+
+TeleportTab:CreateButton({
+   Name = "Refresh Player List",
+   Callback = function()
+      PlayerDropdown:Refresh(getPlayersList(), true)
    end,
 })
 
@@ -142,6 +173,12 @@ ExploitsTab:CreateToggle({
 -- פתיחה/סגירה ב-T
 UIS.InputBegan:Connect(function(i, g)
    if not g and i.KeyCode == Enum.KeyCode.T then
-      if Window.Visible then Window:Close() else Window:Open() end
+      -- Rayfield standard toggle
    end
 end)
+
+Rayfield:Notify({
+   Title = "ILhub Loaded",
+   Content = "Everything is ready! Created by ilay and liran",
+   Duration = 5
+})
