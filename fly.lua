@@ -3,8 +3,8 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9.7",
-   LoadingTitle = "Upgrading Teleport System...",
+   Name = "Voidware | ILhub Ultimate V9.8",
+   LoadingTitle = "Applying UI Layout...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -35,13 +35,40 @@ local function updateESPColor()
 end
 
 -- Tabs
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
+-- TELEPORT (כמו בתמונה ששלחת - רשימת כפתורים)
+TeleportTab:CreateSection("Active Players")
+
+local function RefreshTPList()
+    -- יצירת כפתור לכל שחקן בשרת
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            TeleportTab:CreateButton({
+                Name = "Teleport to: " .. p.Name,
+                Callback = function()
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+                        Rayfield:Notify({
+                            Title = "Teleported",
+                            Content = "Arrived at " .. p.Name,
+                            Duration = 2
+                        })
+                    end
+                end,
+            })
+        end
+    end
+end
+
+-- הרצה ראשונה של הרשימה
+RefreshTPList()
+
 -- MOVEMENT
-MovementTab:CreateSection("Character Physics")
+MovementTab:CreateSection("Physicals")
 
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
@@ -75,7 +102,7 @@ MovementTab:CreateSlider({
 MovementTab:CreateSection("Flight Settings")
 
 MovementTab:CreateSlider({
-   Name = "Fly Speed Multiplier",
+   Name = "Fly Speed",
    Range = {0, 1000},
    Increment = 1,
    CurrentValue = 50,
@@ -112,7 +139,7 @@ MovementTab:CreateToggle({
 VisualsTab:CreateSection("ESP Customization")
 
 VisualsTab:CreateColorPicker({
-    Name = "ESP Color Selector",
+    Name = "ESP Highlight Color",
     Color = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
         espColor = Value
@@ -146,56 +173,6 @@ VisualsTab:CreateToggle({
    end,
 })
 
--- TELEPORT (המערכת החדשה בלחיצה אחת)
-local function CreateTPButtons()
-    -- מנקה את הטאב לפני יצירה מחדש (למקרה של Refresh)
-    for _, element in pairs(TeleportTab.Elements) do
-        if element.ClassName == "Button" and element.Name ~= "Refresh Player List" then
-            element:Destroy()
-        end
-    end
-
-    TeleportTab:CreateSection("Click to Teleport")
-
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player then
-            TeleportTab:CreateButton({
-                Name = "Teleport to: " .. p.DisplayName .. " (@" .. p.Name .. ")",
-                Callback = function()
-                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                        player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                        Rayfield:Notify({
-                            Title = "Teleport Success",
-                            Content = "Shugart to " .. p.DisplayName,
-                            Duration = 2
-                        })
-                    else
-                        Rayfield:Notify({
-                            Title = "Teleport Failed",
-                            Content = "Player character not found",
-                            Duration = 2
-                        })
-                    end
-                end,
-            })
-        end
-    end
-end
-
--- יצירה ראשונית של הרשימה
-CreateTPButtons()
-
-TeleportTab:CreateSection("List Controls")
-TeleportTab:CreateButton({
-   Name = "Refresh Player List",
-   Callback = function()
-       -- ב-Rayfield הדרך הכי טובה לעדכן רשימת כפתורים דינמית היא פשוט להריץ שוב את הפונקציה
-       -- שים לב: חלק מהגרסאות של Rayfield לא תומכות במחיקת כפתורים בזמן ריצה, 
-       -- אם זה קורה, מומלץ להשתמש ב-Dropdown המקורי או להפעיל מחדש את הסקריפט.
-       CreateTPButtons()
-   end,
-})
-
 -- EXPLOITS
 ExploitsTab:CreateSection("Character Mod")
 ExploitsTab:CreateToggle({
@@ -214,7 +191,7 @@ ExploitsTab:CreateToggle({
 })
 
 Rayfield:Notify({
-   Title = "Voidware V9.7",
-   Content = "Instant Teleport List Ready!",
+   Title = "Voidware V9.8",
+   Content = "Teleport List Updated! (English Only)",
    Duration = 5
 })
