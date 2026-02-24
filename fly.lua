@@ -1,61 +1,56 @@
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-
+local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
-local flying = false
 
 -- הגדרות
+local flying = false
 local flySpeed = 90
-local walkSpeed = 50
-local jumpPower = 120
-local vehicleSpeed = 150
-
 local control = {f=0,b=0,l=0,r=0,u=0,d=0}
 local bv, bg
 
--- סטטים לשחקן
-local function applyMovementStats(char)
-    local hum = char:WaitForChild("Humanoid")
-    hum.WalkSpeed = walkSpeed
-    hum.JumpPower = jumpPower
+-- יצירת הלוח (GUI)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FlyGui"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
 
-    hum.Seated:Connect(function(active, seat)
-        if active and seat then
-            seat.MaxSpeed = vehicleSpeed
-        end
-    end)
-end
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0.1, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.Active = true
+frame.Draggable = true -- שתוכל להזיז את הלוח
+frame.Parent = ScreenGui
 
--- Fly
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "ILhub Fly Menu"
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+title.Parent = frame
+
+local flyBtn = Instance.new("TextButton")
+flyBtn.Size = UDim2.new(0, 180, 0, 40)
+flyBtn.Position = UDim2.new(0, 10, 0, 50)
+flyBtn.Text = "Toggle Fly (F)"
+flyBtn.BackgroundColor3 = Color3.fromRGB(100, 20, 20)
+flyBtn.TextColor3 = Color3.new(1,1,1)
+flyBtn.Parent = frame
+
+-- פונקציות תעופה
 local function startFly()
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
-
-    applyMovementStats(char)
-
-    bv = Instance.new("BodyVelocity")
+    bv = Instance.new("BodyVelocity", hrp)
     bv.MaxForce = Vector3.new(9e9,9e9,9e9)
-    bv.Velocity = Vector3.zero
-    bv.Parent = hrp
-
-    bg = Instance.new("BodyGyro")
+    bg = Instance.new("BodyGyro", hrp)
     bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
     bg.P = 9e4
-    bg.CFrame = hrp.CFrame
-    bg.Parent = hrp
-
-    RunService:BindToRenderStep("Fly", Enum.RenderPriority.Character.Value, function()
-        if not flying then return end
-
+    
+    RunService:BindToRenderStep("Fly", 200, function()
         local cam = workspace.CurrentCamera
-        local move = Vector3.new()
-
-        move = move + (cam.CFrame.LookVector * (control.f - control.b))
-        move = move + (cam.CFrame.RightVector * (control.r - control.l))
-        move = move + (Vector3.new(0,1,0) * (control.u - control.d))
-
-        bv.Velocity = move * flySpeed
+        bv.Velocity = ((cam.CFrame.LookVector * (control.f - control.b)) + (cam.CFrame.RightVector * (control.r - control.l)) + (Vector3.new(0,1,0) * (control.u - control.d))).Unit * flySpeed
         bg.CFrame = cam.CFrame
     end)
 end
@@ -66,19 +61,21 @@ local function stopFly()
     if bg then bg:Destroy() end
 end
 
--- מקשים
+flyBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+    if flying then 
+        flyBtn.BackgroundColor3 = Color3.fromRGB(20, 100, 20)
+        startFly() 
+    else 
+        flyBtn.BackgroundColor3 = Color3.fromRGB(100, 20, 20)
+        stopFly() 
+    end
+end)
+
+-- שליטה במקלדת
 UIS.InputBegan:Connect(function(input, gpe)
     if gpe then return end
-
-    if input.KeyCode == Enum.KeyCode.F then
-        flying = not flying
-        if flying then
-            startFly()
-        else
-            stopFly()
-        end
-    end
-
+    if input.KeyCode == Enum.KeyCode.F then flyBtn.Text = "Toggle Fly (F)"; flying = not flying; if flying then startFly() else stopFly() end end
     if input.KeyCode == Enum.KeyCode.W then control.f = 1 end
     if input.KeyCode == Enum.KeyCode.S then control.b = 1 end
     if input.KeyCode == Enum.KeyCode.A then control.l = 1 end
@@ -94,10 +91,4 @@ UIS.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.D then control.r = 0 end
     if input.KeyCode == Enum.KeyCode.Space then control.u = 0 end
     if input.KeyCode == Enum.KeyCode.LeftShift then control.d = 0 end
-end)
-
-player.CharacterAdded:Connect(function(char)
-    flying = false
-    stopFly()
-    applyMovementStats(char)
 end)
