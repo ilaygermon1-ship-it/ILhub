@@ -16,9 +16,9 @@ local selectedPlayer = ""
 local flySpeed = 50
 local flying = false
 local noclip = false
-local infJump = false -- משתנה חדש לקפיצה
+local infJump = false
 
--- פונקציית הקפיצה האינסופית
+-- Infinite Jump Logic
 UIS.JumpRequest:Connect(function()
     if infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
@@ -33,7 +33,7 @@ local function getPlayersList()
     return pTable
 end
 
--- טאבים
+-- Tabs
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
@@ -42,9 +42,8 @@ local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 -- MOVEMENT
 MovementTab:CreateSection("Physicals")
 
--- הכפתור החדש שביקשת!
 MovementTab:CreateToggle({
-   Name = "Infinite Jump (קפיצה אינסופית)",
+   Name = "Infinite Jump",
    CurrentValue = false,
    Callback = function(state)
       infJump = state
