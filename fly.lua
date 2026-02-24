@@ -24,9 +24,9 @@ local flySpeed = 50
 local flying = false
 local noclip = false
 local espEnabled = false
-local selectedPlayer = "" -- השחקן שנבחר מהרשימה
+local selectedPlayer = "" 
 
---- פונקציה לעדכון רשימת השחקנים ---
+--- פונקציה שמחזירה שמות של שחקנים (בלי השחקן המקומי) ---
 local function getPlayersList()
     local players = {}
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -74,39 +74,49 @@ VisualsTab:CreateToggle({
    end,
 })
 
---- קטגוריית Teleport (מעודכן עם רשימה!) ---
-TeleportTab:CreateSection("Select Player")
+--- קטגוריית Teleport (סידור הרשימה) ---
+TeleportTab:CreateSection("Teleport Menu")
 
 local PlayerDropdown = TeleportTab:CreateDropdown({
-   Name = "Choose Player",
+   Name = "Select Player to Teleport",
    Options = getPlayersList(),
-   CurrentOption = "",
+   CurrentOption = {""},
+   MultipleOptions = false,
    Flag = "PlayerDropdown",
-   Callback = function(Option)
-      selectedPlayer = Option
+   Callback = function(Options)
+      -- ב-Rayfield גרסאות חדשות זה מגיע כטבלה, אז אנחנו לוקחים את הערך הראשון
+      if type(Options) == "table" then
+          selectedPlayer = Options[1]
+      else
+          selectedPlayer = Options
+      end
    end,
 })
 
--- עדכון אוטומטי של הרשימה כשמישהו נכנס/יוצא
-game.Players.PlayerAdded:Connect(function()
-    PlayerDropdown:Refresh(getPlayersList(), true)
-end)
-game.Players.PlayerRemoving:Connect(function()
-    PlayerDropdown:Refresh(getPlayersList(), true)
-end)
+-- כפתור רענון רשימה (אם מישהו נכנס הרגע)
+TeleportTab:CreateButton({
+   Name = "Refresh Player List",
+   Callback = function()
+      PlayerDropdown:Refresh(getPlayersList(), true)
+      Rayfield:Notify({Title = "Updated", Content = "Player list refreshed!", Duration = 2})
+   end,
+})
 
+-- כפתור שיגור
 TeleportTab:CreateButton({
    Name = "Teleport to Selected Player",
    Callback = function()
-      if selectedPlayer ~= "" then
+      if selectedPlayer ~= "" and selectedPlayer ~= nil then
          local target = game.Players:FindFirstChild(selectedPlayer)
          local localChar = game.Players.LocalPlayer.Character
          if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and localChar then
             localChar.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
             Rayfield:Notify({Title = "Success", Content = "Teleported to " .. selectedPlayer, Duration = 3})
+         else
+            Rayfield:Notify({Title = "Error", Content = "Target or character not found!", Duration = 3})
          end
       else
-         Rayfield:Notify({Title = "Wait!", Content = "Please select a player first!", Duration = 3})
+         Rayfield:Notify({Title = "Warning", Content = "Please select a player from the list!", Duration = 3})
       end
    end,
 })
@@ -195,6 +205,6 @@ ExploitsTab:CreateToggle({
 
 Rayfield:Notify({
    Title = "ILhub Loaded",
-   Content = "Dropdown Teleport is active!",
+   Content = "Select a player from the list to teleport!",
    Duration = 5,
 })
