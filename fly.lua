@@ -3,8 +3,8 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9.4",
-   LoadingTitle = "Fixing Fly Speed...",
+   Name = "Voidware | ILhub Ultimate V9.5",
+   LoadingTitle = "Ultimate Systems Loading...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -83,6 +83,15 @@ MovementTab:CreateSlider({
 
 MovementTab:CreateSection("Fly Controls")
 
+-- הזזתי את הסליידר לכאן כדי לוודא שהוא מופיע
+MovementTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {0, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(v) flySpeed = v end,
+})
+
 MovementTab:CreateToggle({
    Name = "Fly (W,A,S,D)",
    CurrentValue = false,
@@ -107,15 +116,6 @@ MovementTab:CreateToggle({
          end)
       end
    end,
-})
-
--- השורה שחזרה עכשיו:
-MovementTab:CreateSlider({
-   Name = "Fly Speed",
-   Range = {0, 1000},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(v) flySpeed = v end,
 })
 
 -- VISUALS
@@ -208,7 +208,7 @@ ExploitsTab:CreateToggle({
 })
 
 Rayfield:Notify({
-   Title = "Voidware V9.4",
-   Content = "Fly Speed Slider fixed!",
+   Title = "Voidware V9.5",
+   Content = "Fly Speed & Color Picker Fixed!",
    Duration = 5
 })
