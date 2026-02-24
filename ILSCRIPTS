@@ -1,94 +1,200 @@
-local R = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local p, fs, fly, nc, esp, ij, ec = game.Players.LocalPlayer, 50, false, false, false, false, Color3.new(1,0,0)
+-- בדיקה אם הסקריפט כבר רץ כדי למנוע את באג הסגירה
+if _G.VoidwareLoaded then 
+    return 
+end
+_G.VoidwareLoaded = true
 
-local Window = R:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V14",
-   LoadingTitle = "By Liran & Ilay IL",
-   LoadingSubtitle = "תרגום מלא לעברית | גרסה יציבה",
-   ConfigurationSaving = { Enabled = false }
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Voidware | ILhub Ultimate V9.9",
+   LoadingTitle = "Fixing Stability...",
+   LoadingSubtitle = "by ilay and liran",
+   ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
 
--- יצירת הטאבים
-local t = Window:CreateTab("Teleport (שיגור)", 4483362458)
-local m = Window:CreateTab("Movement (תנועה)", 4483345998)
-local v = Window:CreateTab("Visuals (ראייה)", 4483362458)
-local x = Window:CreateTab("Exploits (פריצות)", 4483362458)
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local flySpeed = 50
+local flying = false
+local noclip = false
+local infJump = false
+local espColor = Color3.fromRGB(255, 0, 0)
+local espEnabled = false
 
---- קטגוריית שיגור ---
-t:CreateSection("Teleport List (רשימת שיגור שחקנים)")
-for _, o in pairs(game.Players:GetPlayers()) do
-    if o ~= p then
-        t:CreateButton({Name = o.DisplayName .. " (שגר אל)", Callback = function() 
-            if o.Character then p.Character.HumanoidRootPart.CFrame = o.Character.HumanoidRootPart.CFrame end 
-        end})
+-- Infinite Jump Logic
+UIS.JumpRequest:Connect(function()
+    if infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+local function updateESPColor()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChild("ILhub_ESP") then
+            p.Character.ILhub_ESP.FillColor = espColor
+        end
     end
 end
 
---- קטגוריית תנועה ---
-m:CreateSection("Character Settings (הגדרות דמות)")
+-- Tabs (סדר הטאבים נשאר כפי שביקשת)
+local MovementTab = Window:CreateTab("Movement", 4483345998)
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+local VisualsTab = Window:CreateTab("Visuals", 4483362458)
+local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
-m:CreateToggle({Name = "Infinity Jump (קפיצה אינסופית)", Callback = function(s) ij = s end})
-game:GetService("UserInputService").JumpRequest:Connect(function() if ij then p.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping") end end)
+-- MOVEMENT
+MovementTab:CreateSection("Physicals")
 
-m:CreateSlider({Name = "WalkSpeed (מהירות הליכה)", Range = {0, 3000}, CurrentValue = 16, Callback = function(val) p.Character.Humanoid.WalkSpeed = val end})
-m:CreateSlider({Name = "JumpPower (גובה קפיצה)", Range = {0, 3000}, CurrentValue = 50, Callback = function(val) p.Character.Humanoid.UseJumpPower = true p.Character.Humanoid.JumpPower = val end})
+MovementTab:CreateToggle({
+   Name = "Infinite Jump",
+   CurrentValue = false,
+   Callback = function(state)
+      infJump = state
+   end,
+})
 
-m:CreateSection("Fly Controls (שליטה בתעופה)")
-m:CreateToggle({Name = "Enable Fly (הפעל תעופה - Space/Q)", Callback = function(s) 
-    fly = s
-    local hrp = p.Character.HumanoidRootPart
-    if fly then
-        local bv = Instance.new("BodyVelocity", hrp)
-        bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-        task.spawn(function()
-            while fly do
-                local cam, uis = workspace.CurrentCamera.CFrame, game:GetService("UserInputService")
-                local d = Vector3.new(0,0,0)
-                if uis:IsKeyDown("W") then d = d + cam.LookVector * fs end
-                if uis:IsKeyDown("S") then d = d + cam.LookVector * -fs end
-                if uis:IsKeyDown("A") then d = d + cam.RightVector * -fs end
-                if uis:IsKeyDown("D") then d = d + cam.RightVector * fs end
-                if uis:IsKeyDown(Enum.KeyCode.Space) then d = d + Vector3.new(0, fs, 0) end
-                if uis:IsKeyDown("Q") then d = d + Vector3.new(0, -fs, 0) end
-                bv.Velocity = d
-                task.wait()
+MovementTab:CreateSlider({
+   Name = "Walk Speed",
+   Range = {16, 1000},
+   Increment = 1,
+   CurrentValue = 16,
+   Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end,
+})
+
+MovementTab:CreateSlider({
+   Name = "Jump Power",
+   Range = {0, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(v) 
+      if player.Character then 
+         player.Character.Humanoid.UseJumpPower = true
+         player.Character.Humanoid.JumpPower = v 
+      end 
+   end,
+})
+
+MovementTab:CreateSection("Flight Settings")
+
+MovementTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {0, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(v) flySpeed = v end,
+})
+
+MovementTab:CreateToggle({
+   Name = "Fly (W,A,S,D)",
+   CurrentValue = false,
+   Callback = function(state)
+      flying = state
+      if flying and player.Character then
+         local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+         local bv = Instance.new("BodyVelocity", hrp)
+         bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+         task.spawn(function()
+            while flying do
+               local cam = workspace.CurrentCamera.CFrame
+               local dir = Vector3.new(0, 0.1, 0)
+               if UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cam.LookVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cam.LookVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cam.RightVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + cam.RightVector * flySpeed end
+               bv.Velocity = dir
+               task.wait()
             end
             bv:Destroy()
-        end)
-    end
-end})
-m:CreateSlider({Name = "Fly Speed (מהירות תעופה)", Range = {0, 3000}, CurrentValue = 50, Callback = function(val) fs = val end})
+         end)
+      end
+   end,
+})
 
---- קטגוריית ראייה ---
-v:CreateSection("ESP Settings (הגדרות ראיית שחקנים)")
-v:CreateToggle({Name = "Enable ESP (הפעל ראייה דרך קירות)", Callback = function(s) 
-    esp = s 
-    for _, o in pairs(game.Players:GetPlayers()) do
-        if o ~= p and o.Character then
-            local h = o.Character:FindFirstChild("Highlight") or Instance.new("Highlight", o.Character)
-            h.Enabled = esp h.FillColor = ec
+-- TELEPORT
+TeleportTab:CreateSection("Active Players")
+
+local function RefreshTPList()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            TeleportTab:CreateButton({
+                Name = "Teleport to: " .. p.Name,
+                Callback = function()
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+                        Rayfield:Notify({
+                            Title = "Teleported",
+                            Content = "Arrived at " .. p.Name,
+                            Duration = 2
+                        })
+                    end
+                end,
+            })
         end
     end
-end})
-v:CreateColorPicker({Name = "ESP Color (בחר צבע וגוון)", Color = ec, Callback = function(c) 
-    ec = c 
-    for _, o in pairs(game.Players:GetPlayers()) do
-        if o.Character and o.Character:FindFirstChild("Highlight") then o.Character.Highlight.FillColor = c end
-    end
-end})
+end
+RefreshTPList()
 
---- קטגוריית פריצות ---
-x:CreateSection("Main Exploits (פריצות ראשיות)")
-x:CreateToggle({Name = "Noclip (לעבור דרך קירות)", Callback = function(s) 
-    nc = s 
-    game:GetService("RunService").Stepped:Connect(function()
-        if nc and p.Character then
-            for _, b in pairs(p.Character:GetDescendants()) do if b:IsA("BasePart") then b.CanCollide = false end end
+-- VISUALS
+VisualsTab:CreateSection("ESP Customization")
+
+VisualsTab:CreateColorPicker({
+    Name = "ESP Highlight Color",
+    Color = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        espColor = Value
+        if espEnabled then
+            updateESPColor()
         end
-    end)
-end})
+    end
+})
 
--- הרצת קישור חיצוני בצורה שקטה
-task.spawn(function() pcall(function() loadstring(game:HttpGet("https://tinyurl.com/ILSCRIPTSHEBREW"))() end) end)
+VisualsTab:CreateToggle({
+   Name = "Enable Player ESP",
+   CurrentValue = false,
+   Callback = function(state)
+      espEnabled = state
+      if espEnabled then
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= player and p.Character then 
+               local h = p.Character:FindFirstChild("ILhub_ESP") or Instance.new("Highlight", p.Character)
+               h.FillColor = espColor
+               h.Name = "ILhub_ESP"
+               h.Enabled = true
+            end
+         end
+      else
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
+               p.Character.ILhub_ESP:Destroy() 
+            end
+         end
+      end
+   end,
+})
 
-R:Notify({Title = "V14 Loaded", Content = "כל הפקודות תורגמו לעברית!", Duration = 5})
+-- EXPLOITS
+ExploitsTab:CreateSection("Character Mod")
+ExploitsTab:CreateToggle({
+   Name = "Noclip",
+   CurrentValue = false,
+   Callback = function(state)
+      noclip = state
+      RunService.Stepped:Connect(function()
+         if noclip and player.Character then
+            for _, v in pairs(player.Character:GetDescendants()) do
+               if v:IsA("BasePart") then v.CanCollide = false end
+            end
+         end
+      end)
+   end,
+})
+
+Rayfield:Notify({
+   Title = "Voidware V9.9",
+   Content = "Stability Fixed - Script won't auto-close.",
+   Duration = 5
+})
