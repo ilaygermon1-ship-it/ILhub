@@ -4,7 +4,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Voidware | ILhub Ultimate V9.8",
-   LoadingTitle = "Applying UI Layout...",
+   LoadingTitle = "Organizing Interface...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -34,41 +34,16 @@ local function updateESPColor()
     end
 end
 
--- Tabs
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+-- Tabs (סדר הטאבים נקבע לפי סדר הכתיבה שלהם כאן)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
--- TELEPORT (כמו בתמונה ששלחת - רשימת כפתורים)
-TeleportTab:CreateSection("Active Players")
+---
 
-local function RefreshTPList()
-    -- יצירת כפתור לכל שחקן בשרת
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player then
-            TeleportTab:CreateButton({
-                Name = "Teleport to: " .. p.Name,
-                Callback = function()
-                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                        player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                        Rayfield:Notify({
-                            Title = "Teleported",
-                            Content = "Arrived at " .. p.Name,
-                            Duration = 2
-                        })
-                    end
-                end,
-            })
-        end
-    end
-end
-
--- הרצה ראשונה של הרשימה
-RefreshTPList()
-
--- MOVEMENT
-MovementTab:CreateSection("Physicals")
+-- MOVEMENT (מופיע עכשיו ראשון)
+MovementTab:CreateSection("Character Physics")
 
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
@@ -135,6 +110,35 @@ MovementTab:CreateToggle({
    end,
 })
 
+---
+
+-- TELEPORT (רשימת כפתורים מסודרת)
+TeleportTab:CreateSection("Active Players")
+
+local function RefreshTPList()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            TeleportTab:CreateButton({
+                Name = "Teleport to: " .. p.Name,
+                Callback = function()
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+                        Rayfield:Notify({
+                            Title = "Teleported",
+                            Content = "Arrived at " .. p.Name,
+                            Duration = 2
+                        })
+                    end
+                end,
+            })
+        end
+    end
+end
+
+RefreshTPList()
+
+---
+
 -- VISUALS
 VisualsTab:CreateSection("ESP Customization")
 
@@ -173,6 +177,8 @@ VisualsTab:CreateToggle({
    end,
 })
 
+---
+
 -- EXPLOITS
 ExploitsTab:CreateSection("Character Mod")
 ExploitsTab:CreateToggle({
@@ -192,6 +198,6 @@ ExploitsTab:CreateToggle({
 
 Rayfield:Notify({
    Title = "Voidware V9.8",
-   Content = "Teleport List Updated! (English Only)",
+   Content = "Movement is now the main tab!",
    Duration = 5
 })
