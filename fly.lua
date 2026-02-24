@@ -1,6 +1,6 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- יצירת החלון
+-- יצירת החלון הראשי
 local Window = Rayfield:CreateWindow({
    Name = "ILhub | Survive Lava",
    LoadingTitle = "ILhub Loading...",
@@ -12,60 +12,47 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
--- משתנה לשמירת מצב התפריט (פתוח/סגור)
-local ui_open = true
+-- משתנים לניהול ה-Fly
+local flying = false
+local flySpeed = 90
+local control = {f=0,b=0,l=0,r=0,u=0,d=0}
+local bv, bg
+local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
--- פונקציה להצגה והסתרה
-local function toggleUI()
-    ui_open = not ui_open
-    if ui_open then
-        Window:Open() -- פותח את התפריט
-    else
-        Window:Close() -- סוגר את התפריט
-    end
+-- פונקציות ה-Fly המקוריות שלך
+local function startFly()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    bv = Instance.new("BodyVelocity", hrp)
+    bv.MaxForce = Vector3.new(9e9,9e9,9e9)
+    bg = Instance.new("BodyGyro", hrp)
+    bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
+    bg.P = 9e4
+    
+    RunService:BindToRenderStep("FlyStep", 200, function()
+        if not flying then return end
+        local cam = workspace.CurrentCamera
+        bv.Velocity = ((cam.CFrame.LookVector * (control.f - control.b)) + (cam.CFrame.RightVector * (control.r - control.l)) + (Vector3.new(0,1,0) * (control.u - control.d))).Unit * flySpeed
+        bg.CFrame = cam.CFrame
+    end)
 end
 
--- זיהוי לחיצה על המקש T
-game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.T then
-        toggleUI()
-    end
-end)
+local function stopFly()
+    RunService:UnbindFromRenderStep("FlyStep")
+    if bv then bv:Destroy() end
+    if bg then bg:Destroy() end
+end
 
--- יצירת טאב Player
+-- טאב Player עם הסליידרים החדשים
 local PlayerTab = Window:CreateTab("Player", 4483362458)
-
 local Section = PlayerTab:CreateSection("Movement")
 
--- כפתור תעופה (Fly)
+-- כפתור Fly בתוך הממשק המעוגל
 PlayerTab:CreateToggle({
    Name = "Fly (Press F)",
    CurrentValue = false,
    Flag = "FlyToggle",
    Callback = function(Value)
-      _G.Flying = Value
-      -- כאן תוכל להוסיף את לוגיקת התעופה שרצית
-      if Value then print("Fly On") else print("Fly Off") end
-   end,
-})
-
--- סליידר למהירות
-PlayerTab:CreateSlider({
-   Name = "WalkSpeed",
-   Range = {16, 300},
-   Increment = 1,
-   Suffix = "Speed",
-   CurrentValue = 16,
-   Flag = "SpeedSlider",
-   Callback = function(Value)
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-   end,
-})
-
--- הודעה למשתמש
-Rayfield:Notify({
-   Title = "ILhub Loaded!",
-   Content = "Press 'T' to Hide/Show the Menu",
-   Duration = 5,
-   Image = 4483362458,
-})
+      flying = Value
+      if flying then startFly() else stopFly
