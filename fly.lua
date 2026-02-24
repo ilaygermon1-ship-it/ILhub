@@ -3,8 +3,8 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9.8",
-   LoadingTitle = "Organizing Interface...",
+   Name = "Voidware | ILhub Ultimate V9.9",
+   LoadingTitle = "Interface Force Update...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -34,23 +34,19 @@ local function updateESPColor()
     end
 end
 
--- Tabs (סדר הטאבים נקבע לפי סדר הכתיבה שלהם כאן)
+-- TABS ORDER (שיניתי כאן את הסדר - Movement עכשיו ראשון)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
----
-
--- MOVEMENT (מופיע עכשיו ראשון)
-MovementTab:CreateSection("Character Physics")
+--- MOVEMENT TAB ---
+MovementTab:CreateSection("Physicals")
 
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
-   Callback = function(state)
-      infJump = state
-   end,
+   Callback = function(state) infJump = state end,
 })
 
 MovementTab:CreateSlider({
@@ -110,10 +106,8 @@ MovementTab:CreateToggle({
    end,
 })
 
----
-
--- TELEPORT (רשימת כפתורים מסודרת)
-TeleportTab:CreateSection("Active Players")
+--- TELEPORT TAB ---
+TeleportTab:CreateSection("Player List (One Click TP)")
 
 local function RefreshTPList()
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -123,23 +117,16 @@ local function RefreshTPList()
                 Callback = function()
                     if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                        Rayfield:Notify({
-                            Title = "Teleported",
-                            Content = "Arrived at " .. p.Name,
-                            Duration = 2
-                        })
+                        Rayfield:Notify({Title = "Teleported", Content = "Arrived at " .. p.Name, Duration = 2})
                     end
                 end,
             })
         end
     end
 end
-
 RefreshTPList()
 
----
-
--- VISUALS
+--- VISUALS TAB ---
 VisualsTab:CreateSection("ESP Customization")
 
 VisualsTab:CreateColorPicker({
@@ -147,9 +134,7 @@ VisualsTab:CreateColorPicker({
     Color = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
         espColor = Value
-        if espEnabled then
-            updateESPColor()
-        end
+        if espEnabled then updateESPColor() end
     end
 })
 
@@ -169,35 +154,32 @@ VisualsTab:CreateToggle({
          end
       else
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
-               p.Character.ILhub_ESP:Destroy() 
-            end
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
          end
       end
    end,
 })
 
----
-
--- EXPLOITS
+--- EXPLOITS TAB ---
 ExploitsTab:CreateSection("Character Mod")
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
    Callback = function(state)
-      noclip = state
-      RunService.Stepped:Connect(function()
-         if noclip and player.Character then
+      nc_conn = RunService.Stepped:Connect(function()
+         if state and player.Character then
             for _, v in pairs(player.Character:GetDescendants()) do
                if v:IsA("BasePart") then v.CanCollide = false end
             end
+         elseif not state and nc_conn then
+            nc_conn:Disconnect()
          end
       end)
    end,
 })
 
 Rayfield:Notify({
-   Title = "Voidware V9.8",
-   Content = "Movement is now the main tab!",
+   Title = "Voidware V9.9",
+   Content = "Tabs reordered: Movement is now first!",
    Duration = 5
 })
