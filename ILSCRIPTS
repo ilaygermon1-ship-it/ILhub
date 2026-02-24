@@ -14,39 +14,21 @@ local function SafeLoad()
     local fs, fly, nc, esp, ij, ec = 50, false, false, false, false, Color3.new(1,0,0)
 
     local Window = R:CreateWindow({
-       Name = "Voidware | ILhub Ultimate V15.2",
+       Name = "Voidware | ILhub Ultimate V15.3",
        LoadingTitle = "מיוצר על ידי לירן ואיליי",
-       LoadingSubtitle = "גרסה יציבה ומתוקנת",
+       LoadingSubtitle = "מהירות וקפיצה עד 3000",
        ConfigurationSaving = { Enabled = false }
     })
 
     -- טאבים
-    local t = Window:CreateTab("שיגור (Teleport)", 4483362458)
     local m = Window:CreateTab("תנועה (Movement)", 4483345998)
+    local t = Window:CreateTab("שיגור (Teleport)", 4483362458)
     local v = Window:CreateTab("ראייה (Visuals)", 4483362458)
     local x = Window:CreateTab("פריצות (Exploits)", 4483362458)
 
-    --- שיגור ---
-    t:CreateSection("רשימת שחקנים")
-    
-    local function UpdateTP()
-        for _, o in pairs(game.Players:GetPlayers()) do
-            if o ~= p then
-                t:CreateButton({
-                    Name = "שגר אותי אל: " .. o.DisplayName, 
-                    Callback = function() 
-                        if o.Character and o.Character:FindFirstChild("HumanoidRootPart") then 
-                            p.Character.HumanoidRootPart.CFrame = o.Character.HumanoidRootPart.CFrame 
-                        end 
-                    end
-                })
-            end
-        end
-    end
-    UpdateTP()
-
     --- תנועה ---
     m:CreateSection("הגדרות דמות")
+    
     m:CreateToggle({Name = "קפיצה אינסופית (Inf Jump)", CurrentValue = false, Callback = function(s) ij = s end})
     
     game:GetService("UserInputService").JumpRequest:Connect(function() 
@@ -55,14 +37,35 @@ local function SafeLoad()
         end 
     end)
 
-    m:CreateSlider({Name = "מהירות ריצה", Range = {16, 1000}, CurrentValue = 16, Callback = function(val) if p.Character then p.Character.Humanoid.WalkSpeed = val end end})
-    m:CreateSlider({Name = "גובה קפיצה", Range = {0, 1000}, CurrentValue = 50, Callback = function(val) if p.Character then p.Character.Humanoid.UseJumpPower = true p.Character.Humanoid.JumpPower = val end end})
+    m:CreateSlider({
+        Name = "מהירות ריצה", 
+        Range = {16, 3000}, 
+        CurrentValue = 16, 
+        Callback = function(val) 
+            if p.Character and p.Character:FindFirstChild("Humanoid") then 
+                p.Character.Humanoid.WalkSpeed = val 
+            end 
+        end
+    })
+
+    m:CreateSlider({
+        Name = "גובה קפיצה", 
+        Range = {0, 3000}, 
+        CurrentValue = 50, 
+        Callback = function(val) 
+            if p.Character and p.Character:FindFirstChild("Humanoid") then 
+                p.Character.Humanoid.UseJumpPower = true 
+                p.Character.Humanoid.JumpPower = val 
+            end 
+        end
+    })
 
     m:CreateSection("תעופה")
     m:CreateToggle({Name = "הפעל תעופה (Space/Q)", CurrentValue = false, Callback = function(s) 
         fly = s
         if fly and p.Character then
-            local hrp = p.Character.HumanoidRootPart
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
             local bv = Instance.new("BodyVelocity", hrp)
             bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
             task.spawn(function()
@@ -82,7 +85,31 @@ local function SafeLoad()
             end)
         end
     end})
-    m:CreateSlider({Name = "מהירות תעופה", Range = {0, 1000}, CurrentValue = 50, Callback = function(val) fs = val end})
+
+    m:CreateSlider({
+        Name = "מהירות תעופה", 
+        Range = {0, 3000}, 
+        CurrentValue = 50, 
+        Callback = function(val) fs = val end
+    })
+
+    --- שיגור ---
+    t:CreateSection("רשימת שחקנים")
+    local function UpdateTP()
+        for _, o in pairs(game.Players:GetPlayers()) do
+            if o ~= p then
+                t:CreateButton({
+                    Name = "שגר אותי אל: " .. o.DisplayName, 
+                    Callback = function() 
+                        if o.Character and o.Character:FindFirstChild("HumanoidRootPart") then 
+                            p.Character.HumanoidRootPart.CFrame = o.Character.HumanoidRootPart.CFrame 
+                        end 
+                    end
+                })
+            end
+        end
+    end
+    UpdateTP()
 
     --- ראייה ---
     v:CreateSection("ESP")
@@ -107,7 +134,7 @@ local function SafeLoad()
         end)
     end})
 
-    R:Notify({Title = "Voidware V15.2", Content = "הסקריפט נטען בהצלחה!", Duration = 5})
+    R:Notify({Title = "Voidware V15.3", Content = "המהירות והקפיצה עודכנו ל-3000!", Duration = 5})
 end
 
 SafeLoad()
