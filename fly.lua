@@ -17,6 +17,8 @@ local flySpeed = 50
 local flying = false
 local noclip = false
 local infJump = false
+local espColor = Color3.fromRGB(255, 0, 0) -- צבע ברירת מחדל: אדום
+local espEnabled = false
 
 -- Infinite Jump Logic
 UIS.JumpRequest:Connect(function()
@@ -24,6 +26,15 @@ UIS.JumpRequest:Connect(function()
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
 end)
+
+-- פונקציה לעדכון צבע ה-ESP בזמן אמת
+local function updateESPColor()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChild("ILhub_ESP") then
+            p.Character.ILhub_ESP.FillColor = espColor
+        end
+    end
+end
 
 local function getPlayersList()
     local pTable = {}
@@ -105,24 +116,42 @@ MovementTab:CreateSlider({
 })
 
 -- VISUALS
+VisualsTab:CreateSection("ESP Settings")
+
 VisualsTab:CreateToggle({
-   Name = "Red ESP Highlight",
+   Name = "Player ESP",
    CurrentValue = false,
    Callback = function(state)
-      if state then
+      espEnabled = state
+      if espEnabled then
          for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character then 
-               local h = Instance.new("Highlight", p.Character)
-               h.FillColor = Color3.fromRGB(255,0,0)
+               local h = p.Character:FindFirstChild("ILhub_ESP") or Instance.new("Highlight", p.Character)
+               h.FillColor = espColor
                h.Name = "ILhub_ESP"
+               h.Enabled = true
             end
          end
       else
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
+               p.Character.ILhub_ESP:Destroy() 
+            end
          end
       end
    end,
+})
+
+-- בחירת צבע ל-ESP
+VisualsTab:CreateColorPicker({
+    Name = "ESP Color",
+    Color = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        espColor = Value
+        if espEnabled then
+            updateESPColor()
+        end
+    end
 })
 
 -- TELEPORT
@@ -171,6 +200,8 @@ TeleportTab:CreateButton({
 })
 
 -- EXPLOITS
+ExploitsTab:CreateSection("Character Exploits")
+
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -188,6 +219,6 @@ ExploitsTab:CreateToggle({
 
 Rayfield:Notify({
    Title = "ILhub Loaded",
-   Content = "Infinite Jump Added! Created by ilay and liran",
+   Content = "ESP Color Picker Added! Created by ilay and liran",
    Duration = 5
 })
