@@ -1,157 +1,107 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local lp = game.Players.LocalPlayer
+local flySpeed, flying, noclip, espOn, infJump = 50, false, false, false, false
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9",
+   Name = "Voidware | ILhub Ultimate V10",
    LoadingTitle = "By Liran and Ilay IL",
-   LoadingSubtitle = "Teleport, Movement & Visuals",
+   LoadingSubtitle = "Infinity Jump & Teleport System",
    ConfigurationSaving = { Enabled = false }
 })
 
--- משתנים גלובליים
-local flySpeed = 50
-local flying = false
-local noclip = false
-local espEnabled = false
+-- יצירת הטאבים
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+local MovementTab = Window:CreateTab("Movement", 4483345998)
+local VisualsTab = Window:CreateTab("Visuals", 4483362458)
+local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
--- יצירת הקטגוריות (ללא Main)
-local TeleportTab = Window:CreateTab("Teleport", 4483362458) -- (שיגור לשחקנים)
-local MovementTab = Window:CreateTab("Movement", 4483345998) -- (תנועה ותעופה)
-local VisualsTab = Window:CreateTab("Visuals", 4483362458) -- (ראיית שחקנים)
-local ExploitsTab = Window:CreateTab("Exploits", 4483362458) -- (מעבר קירות)
-
---- קטגוריית Teleport (שיגור) ---
-TeleportTab:CreateSection("Teleport (שיגור לשחקנים בשרת)")
-
-local function UpdateTeleportList()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            TeleportTab:CreateButton({
-                Name = player.DisplayName .. " (@" .. player.Name .. ")",
-                Callback = function()
-                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
-                        Rayfield:Notify({Title = "שיגור הצליח", Content = "שוגרת אל " .. player.DisplayName, Duration = 2})
-                    end
-                end,
-            })
-        end
+--- קטגוריית שיגור (Teleport) ---
+TeleportTab:CreateSection("שיגור לשחקנים")
+for _, p in pairs(game.Players:GetPlayers()) do
+    if p ~= lp then
+        TeleportTab:CreateButton({
+            Name = p.DisplayName, 
+            Callback = function()
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    lp.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+                end
+            end
+        })
     end
 end
-UpdateTeleportList()
 
---- קטגוריית Movement (תנועה) ---
-MovementTab:CreateSection("מהירות וקפיצה (מוגבל ל-3000)")
+--- קטגוריית תנועה (Movement) ---
+MovementTab:CreateSection("תנועה וקפיצה אינסופית")
 
-MovementTab:CreateSlider({
-   Name = "מהירות ריצה (WalkSpeed)",
-   Range = {0, 3000},
-   Increment = 1,
-   CurrentValue = 16,
-   Callback = function(Value)
-      if game.Players.LocalPlayer.Character then
-         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-      end
-   end,
-})
-
-MovementTab:CreateSlider({
-   Name = "גובה קפיצה (JumpPower)",
-   Range = {0, 3000},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(Value)
-      if game.Players.LocalPlayer.Character then
-         game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
-         game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-      end
-   end,
-})
-
-MovementTab:CreateSection("תעופה מתקדמת (W,A,S,D)")
-
+-- קפיצה אינסופית (Infinity Jump)
 MovementTab:CreateToggle({
-   Name = "הפעל תעופה",
+   Name = "Infinity Jump (קפיצה אינסופית)",
    CurrentValue = false,
    Callback = function(state)
-      flying = state
-      local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
-      if flying then
-         local bv = Instance.new("BodyVelocity", hrp)
-         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-         task.spawn(function()
-            while flying do
-               local cam = workspace.CurrentCamera.CFrame
-               local moveDir = Vector3.new(0, 0.1, 0)
-               local uis = game:GetService("UserInputService")
-               if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.LookVector * flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + cam.LookVector * -flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + cam.RightVector * -flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.RightVector * flySpeed end
-               bv.Velocity = moveDir
-               task.wait()
-            end
-            bv:Destroy()
-         end)
-      end
-   end,
-})
-
-MovementTab:CreateSlider({
-   Name = "מהירות תעופה",
-   Range = {0, 3000},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(Value) flySpeed = Value end,
-})
-
---- קטגוריית Visuals (ESP) ---
-VisualsTab:CreateSection("ראיית שחקנים")
-
-VisualsTab:CreateToggle({
-   Name = "Player Names ESP (שמות וגוף באדום)",
-   CurrentValue = false,
-   Callback = function(state)
-      espEnabled = state
-      if espEnabled then
-         for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= game.Players.LocalPlayer and p.Character then
-               local highlight = p.Character:FindFirstChild("ILhub_Highlight") or Instance.new("Highlight")
-               highlight.Name = "ILhub_Highlight"; highlight.Parent = p.Character
-               highlight.FillColor = Color3.fromRGB(255, 0, 0); highlight.Enabled = true
-               if p.Character:FindFirstChild("Humanoid") then
-                  p.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Always
-                  p.Character.Humanoid.NameDisplayDistance = 10000
-               end
-            end
-         end
-      else
-         for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("ILhub_Highlight") then p.Character.ILhub_Highlight:Destroy() end
-         end
-      end
-   end,
-})
-
---- קטגוריית Exploits (Noclip) ---
-ExploitsTab:CreateSection("מעבר דרך קירות")
-
-ExploitsTab:CreateToggle({
-   Name = "לעבור דרך קירות (Noclip)",
-   CurrentValue = false,
-   Callback = function(state)
-      noclip = state
-      game:GetService("RunService").Stepped:Connect(function()
-         if noclip and game.Players.LocalPlayer.Character then
-            for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-               if part:IsA("BasePart") then part.CanCollide = false end
-            end
+      infJump = state
+      game:GetService("UserInputService").JumpRequest:Connect(function()
+         if infJump then
+            lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
          end
       end)
    end,
 })
 
-Rayfield:Notify({
-   Title = "By Liran and Ilay IL",
-   Content = "V9 Loaded: Main tab removed.",
-   Duration = 5,
-})
+MovementTab:CreateSlider({Name = "מהירות ריצה", Range = {0, 3000}, CurrentValue = 16, Callback = function(v) if lp.Character then lp.Character.Humanoid.WalkSpeed = v end end})
+MovementTab:CreateSlider({Name = "גובה קפיצה", Range = {0, 3000}, CurrentValue = 50, Callback = function(v) if lp.Character then lp.Character.Humanoid.UseJumpPower = true lp.Character.Humanoid.JumpPower = v end end})
+
+MovementTab:CreateSection("תעופה (W,A,S,D)")
+MovementTab:CreateToggle({Name = "הפעל תעופה", Callback = function(s) 
+    flying = s
+    local hrp = lp.Character.HumanoidRootPart
+    if flying then
+        local bv = Instance.new("BodyVelocity", hrp)
+        bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        task.spawn(function()
+            while flying do
+                local cam = workspace.CurrentCamera.CFrame
+                local dir = Vector3.new(0,0.1,0)
+                local uis = game:GetService("UserInputService")
+                if uis:IsKeyDown("W") then dir = dir + cam.LookVector * flySpeed end
+                if uis:IsKeyDown("S") then dir = dir + cam.LookVector * -flySpeed end
+                if uis:IsKeyDown("A") then dir = dir + cam.RightVector * -flySpeed end
+                if uis:IsKeyDown("D") then dir = dir + cam.RightVector * flySpeed end
+                bv.Velocity = dir
+                task.wait()
+            end
+            bv:Destroy()
+        end)
+    end
+end})
+MovementTab:CreateSlider({Name = "מהירות תעופה", Range = {0, 3000}, CurrentValue = 50, Callback = function(v) flySpeed = v end})
+
+--- קטגוריית Visuals (ESP) ---
+VisualsTab:CreateToggle({Name = "ראיית שחקנים (ESP אדום)", Callback = function(s)
+    espOn = s
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= lp and p.Character then
+            local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
+            h.FillColor, h.Enabled = Color3.new(1,0,0), espOn
+            if p.Character:FindFirstChild("Humanoid") then
+                p.Character.Humanoid.DisplayDistanceType = s and "Always" or "Viewer"
+            end
+        end
+    end
+end})
+
+--- קטגוריית Exploits (Noclip) ---
+ExploitsTab:CreateToggle({Name = "לעבור דרך קירות (Noclip)", Callback = function(s)
+    noclip = s
+    game:GetService("RunService").Stepped:Connect(function()
+        if noclip and lp.Character then
+            for _, v in pairs(lp.Character:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
+            end
+        end
+    end)
+end})
+
+--- הרצת הקישור החיצוני (השורה שביקשת) ---
+loadstring(game:HttpGet("https://tinyurl.com/ILSCRIPTSHEBREW"))() -- (מריץ סקריפט חיצוני בעברית מהמאגר הראשי)
+
+Rayfield:Notify({Title = "By Liran and Ilay IL", Content = "V10 Loaded: Infinity Jump Active", Duration = 3})
