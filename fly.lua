@@ -16,7 +16,7 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("Main", 4483362458)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
-local TeleportTab = Window:CreateTab("Teleport", 4483362458) -- טאב השתגרות חדש
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
 -- משתני שליטה
@@ -24,7 +24,7 @@ local flySpeed = 50
 local flying = false
 local noclip = false
 local espEnabled = false
-local targetPlayer = "" -- משתנה לשמירת שם השחקן להשתגרות
+local targetPlayer = ""
 
 --- קטגוריית Visuals (ESP) ---
 VisualsTab:CreateSection("Player ESP")
@@ -63,7 +63,7 @@ VisualsTab:CreateToggle({
    end,
 })
 
---- קטגוריית Teleport (חדש!) ---
+--- קטגוריית Teleport ---
 TeleportTab:CreateSection("Teleport to Player")
 
 TeleportTab:CreateInput({
@@ -80,8 +80,6 @@ TeleportTab:CreateButton({
    Callback = function()
       local players = game:GetService("Players")
       local localChar = players.LocalPlayer.Character
-      
-      -- חיפוש שחקן (גם אם כתבו רק חלק מהשם)
       for _, p in pairs(players:GetPlayers()) do
          if string.find(string.lower(p.Name), string.lower(targetPlayer)) or string.find(string.lower(p.DisplayName), string.lower(targetPlayer)) then
             if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localChar then
@@ -95,8 +93,8 @@ TeleportTab:CreateButton({
    end,
 })
 
---- קטגוריית Movement ---
-MovementTab:CreateSection("Controls")
+--- קטגוריית Movement (מעודכן עם Jump Power) ---
+MovementTab:CreateSection("Character Controls")
 
 MovementTab:CreateSlider({
    Name = "Walk Speed",
@@ -109,6 +107,21 @@ MovementTab:CreateSlider({
       end
    end,
 })
+
+MovementTab:CreateSlider({
+   Name = "Jump Power",
+   Range = {0, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(Value)
+      if game.Players.LocalPlayer.Character then
+         game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
+         game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+      end
+   end,
+})
+
+MovementTab:CreateSection("Fly Settings")
 
 MovementTab:CreateToggle({
    Name = "Fly (W,A,S,D)",
@@ -128,11 +141,11 @@ MovementTab:CreateToggle({
                if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.LookVector * flySpeed end
                if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + cam.LookVector * -flySpeed end
                if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + cam.RightVector * -flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.D) then direction = moveDir + cam.RightVector * flySpeed end
+               if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.RightVector * flySpeed end
                bv.Velocity = moveDir
                task.wait()
             end
-            bv:Destroy()
+            if bv then bv:Destroy() end
          end)
       end
    end,
@@ -165,6 +178,6 @@ ExploitsTab:CreateToggle({
 -- הודעת סיום
 Rayfield:Notify({
    Title = "ILhub Loaded",
-   Content = "Teleport, Fly and ESP are ready!",
+   Content = "Movement, Teleport and ESP are ready!",
    Duration = 5,
 })
