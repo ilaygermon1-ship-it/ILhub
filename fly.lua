@@ -1,9 +1,12 @@
--- טעינת ספריית העיצוב Rayfield
+-- Ensure the game is loaded
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+-- Load Rayfield Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Voidware | ILhub Ultimate",
-   LoadingTitle = "Loading Systems...",
+   LoadingTitle = "Systems Loading...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = {
       Enabled = true,
@@ -12,126 +15,44 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
--- יצירת הקטגוריות
-local MainTab = Window:CreateTab("Main", 4483362458)
-local MovementTab = Window:CreateTab("Movement", 4483345998)
-local VisualsTab = Window:CreateTab("Visuals", 4483362458)
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
-local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
-
--- משתני שליטה
-local flySpeed = 50
+-- Variables
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local flying = false
 local noclip = false
 local espEnabled = false
-local selectedPlayer = "" 
+local flySpeed = 50
+local selectedPlayer = ""
 
---- פונקציה שמחזירה שמות של שחקנים (בלי השחקן המקומי) ---
+-- Helper Function: Get Players List
 local function getPlayersList()
     local players = {}
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= game.Players.LocalPlayer then
+        if p ~= player then
             table.insert(players, p.Name)
         end
     end
     return players
 end
 
---- קטגוריית Visuals (ESP) ---
-VisualsTab:CreateSection("Player ESP")
+-- TABS
+local MovementTab = Window:CreateTab("Movement", 4483345998)
+local VisualsTab = Window:CreateTab("Visuals", 4483362458)
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
-VisualsTab:CreateToggle({
-   Name = "Player ESP (Red Highlight)",
-   CurrentValue = false,
-   Flag = "ESPToggle",
-   Callback = function(state)
-      espEnabled = state
-      local function createESP(player)
-         if player ~= game.Players.LocalPlayer then
-            local highlight = Instance.new("Highlight")
-            highlight.Name = "ILhub_Highlight"
-            highlight.FillColor = Color3.fromRGB(255, 0, 0)
-            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-            highlight.FillTransparency = 0.5
-            
-            local function applyESP()
-               if player.Character then highlight.Parent = player.Character end
-            end
-            applyESP()
-            player.CharacterAdded:Connect(applyESP)
-         end
-      end
-
-      if espEnabled then
-         for _, player in pairs(game.Players:GetPlayers()) do createESP(player) end
-      else
-         for _, player in pairs(game.Players:GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("ILhub_Highlight") then
-               player.Character.ILhub_Highlight:Destroy()
-            end
-         end
-      end
-   end,
-})
-
---- קטגוריית Teleport (סידור הרשימה) ---
-TeleportTab:CreateSection("Teleport Menu")
-
-local PlayerDropdown = TeleportTab:CreateDropdown({
-   Name = "Select Player to Teleport",
-   Options = getPlayersList(),
-   CurrentOption = {""},
-   MultipleOptions = false,
-   Flag = "PlayerDropdown",
-   Callback = function(Options)
-      -- ב-Rayfield גרסאות חדשות זה מגיע כטבלה, אז אנחנו לוקחים את הערך הראשון
-      if type(Options) == "table" then
-          selectedPlayer = Options[1]
-      else
-          selectedPlayer = Options
-      end
-   end,
-})
-
--- כפתור רענון רשימה (אם מישהו נכנס הרגע)
-TeleportTab:CreateButton({
-   Name = "Refresh Player List",
-   Callback = function()
-      PlayerDropdown:Refresh(getPlayersList(), true)
-      Rayfield:Notify({Title = "Updated", Content = "Player list refreshed!", Duration = 2})
-   end,
-})
-
--- כפתור שיגור
-TeleportTab:CreateButton({
-   Name = "Teleport to Selected Player",
-   Callback = function()
-      if selectedPlayer ~= "" and selectedPlayer ~= nil then
-         local target = game.Players:FindFirstChild(selectedPlayer)
-         local localChar = game.Players.LocalPlayer.Character
-         if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and localChar then
-            localChar.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
-            Rayfield:Notify({Title = "Success", Content = "Teleported to " .. selectedPlayer, Duration = 3})
-         else
-            Rayfield:Notify({Title = "Error", Content = "Target or character not found!", Duration = 3})
-         end
-      else
-         Rayfield:Notify({Title = "Warning", Content = "Please select a player from the list!", Duration = 3})
-      end
-   end,
-})
-
---- קטגוריית Movement ---
+--- MOVEMENT TAB ---
 MovementTab:CreateSection("Character Physicals")
 
 MovementTab:CreateSlider({
    Name = "Walk Speed",
-   Range = {0, 1000},
+   Range = {16, 1000},
    Increment = 1,
    CurrentValue = 16,
    Callback = function(Value)
-      if game.Players.LocalPlayer.Character then
-         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+      if player.Character and player.Character:FindFirstChild("Humanoid") then
+         player.Character.Humanoid.WalkSpeed = Value
       end
    end,
 })
@@ -142,9 +63,9 @@ MovementTab:CreateSlider({
    Increment = 1,
    CurrentValue = 50,
    Callback = function(Value)
-      if game.Players.LocalPlayer.Character then
-         game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
-         game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+      if player.Character and player.Character:FindFirstChild("Humanoid") then
+         player.Character.Humanoid.UseJumpPower = true
+         player.Character.Humanoid.JumpPower = Value
       end
    end,
 })
@@ -156,20 +77,20 @@ MovementTab:CreateToggle({
    CurrentValue = false,
    Callback = function(state)
       flying = state
-      local char = game.Players.LocalPlayer.Character
+      local char = player.Character
       local hrp = char:FindFirstChild("HumanoidRootPart")
       if flying and hrp then
          local bv = Instance.new("BodyVelocity", hrp)
+         bv.Name = "FlyVelocity"
          bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
          task.spawn(function()
             while flying do
                local cam = workspace.CurrentCamera.CFrame
                local moveDir = Vector3.new(0, 0.1, 0)
-               local uis = game:GetService("UserInputService")
-               if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.LookVector * flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + cam.LookVector * -flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + cam.RightVector * -flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.RightVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.LookVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + cam.LookVector * -flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + cam.RightVector * -flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.RightVector * flySpeed end
                bv.Velocity = moveDir
                task.wait()
             end
@@ -187,24 +108,124 @@ MovementTab:CreateSlider({
    Callback = function(Value) flySpeed = Value end,
 })
 
---- קטגוריית Exploits ---
+--- VISUALS TAB (ESP) ---
+VisualsTab:CreateSection("Player ESP")
+
+VisualsTab:CreateToggle({
+   Name = "Red Highlight ESP",
+   CurrentValue = false,
+   Flag = "ESPToggle",
+   Callback = function(state)
+      espEnabled = state
+      local function createESP(p)
+         if p ~= player then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "ILhub_Highlight"
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.5
+            local function apply() if p.Character then highlight.Parent = p.Character end end
+            apply()
+            p.CharacterAdded:Connect(apply)
+         end
+      end
+
+      if espEnabled then
+         for _, p in pairs(game.Players:GetPlayers()) do createESP(p) end
+      else
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("ILhub_Highlight") then
+               p.Character.ILhub_Highlight:Destroy()
+            end
+         end
+      end
+   end,
+})
+
+--- TELEPORT TAB (With Image Preview) ---
+TeleportTab:CreateSection("Teleport Menu")
+
+local PlayerDropdown = TeleportTab:CreateDropdown({
+   Name = "Select Target Player",
+   Options = getPlayersList(),
+   CurrentOption = {""},
+   Callback = function(Options)
+      selectedPlayer = type(Options) == "table" and Options[1] or Options
+      
+      -- הצגת תמונה של השחקן שנבחר
+      if selectedPlayer ~= "" and selectedPlayer ~= nil then
+         local target = game.Players:FindFirstChild(selectedPlayer)
+         if target then
+            -- מושך את תמונת הראש של השחקן
+            local content, isReady = game.Players:GetUserThumbnailAsync(
+                target.UserId, 
+                Enum.ThumbnailType.HeadShot, 
+                Enum.ThumbnailSize.Size150x150
+            )
+            
+            -- שולח התראה עם התמונה של השחקן
+            Rayfield:Notify({
+               Title = "Target: " .. selectedPlayer,
+               Content = "Profile loaded. You can now teleport.",
+               Duration = 4,
+               Image = content -- כאן מופיעה התמונה!
+            })
+         end
+      end
+   end,
+})
+
+TeleportTab:CreateButton({
+   Name = "Refresh Player List",
+   Callback = function()
+      PlayerDropdown:Refresh(getPlayersList(), true)
+   end,
+})
+
+TeleportTab:CreateButton({
+   Name = "Teleport Now",
+   Callback = function()
+      if selectedPlayer ~= "" then
+         local target = game.Players:FindFirstChild(selectedPlayer)
+         if target and target.Character and player.Character then
+            player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+            Rayfield:Notify({Title = "Success", Content = "Teleported to " .. selectedPlayer, Duration = 2})
+         end
+      else
+         Rayfield:Notify({Title = "Error", Content = "Select a player first!", Duration = 3})
+      end
+   end,
+})
+
+--- EXPLOITS TAB ---
+ExploitsTab:CreateSection("Special Abilities")
+
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
    Callback = function(state)
       noclip = state
-      game:GetService("RunService").Stepped:Connect(function()
-         if noclip and game.Players.LocalPlayer.Character then
-            for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-               if part:IsA("BasePart") then part.CanCollide = false end
+      RunService.Stepped:Connect(function()
+         if noclip and player.Character then
+            for _, v in pairs(player.Character:GetDescendants()) do
+               if v:IsA("BasePart") then v.CanCollide = false end
             end
          end
       end)
    end,
 })
 
+-- UI Toggle Key (T)
+local ui_open = true
+UIS.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.T then
+        ui_open = not ui_open
+        if ui_open then Window:Open() else Window:Close() end
+    end
+end)
+
 Rayfield:Notify({
-   Title = "ILhub Loaded",
-   Content = "Select a player from the list to teleport!",
+   Title = "ILhub Loaded Successfully",
+   Content = "Teleport with images and all features ready!",
    Duration = 5,
 })
