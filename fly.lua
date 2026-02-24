@@ -24,7 +24,18 @@ local flySpeed = 50
 local flying = false
 local noclip = false
 local espEnabled = false
-local targetPlayer = ""
+local selectedPlayer = "" -- השחקן שנבחר מהרשימה
+
+--- פונקציה לעדכון רשימת השחקנים ---
+local function getPlayersList()
+    local players = {}
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= game.Players.LocalPlayer then
+            table.insert(players, p.Name)
+        end
+    end
+    return players
+end
 
 --- קטגוריית Visuals (ESP) ---
 VisualsTab:CreateSection("Player ESP")
@@ -63,60 +74,65 @@ VisualsTab:CreateToggle({
    end,
 })
 
---- קטגוריית Teleport ---
-TeleportTab:CreateSection("Teleport to Player")
+--- קטגוריית Teleport (מעודכן עם רשימה!) ---
+TeleportTab:CreateSection("Select Player")
 
-TeleportTab:CreateInput({
-   Name = "Player Name",
-   PlaceholderText = "Enter Username...",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      targetPlayer = Text
+local PlayerDropdown = TeleportTab:CreateDropdown({
+   Name = "Choose Player",
+   Options = getPlayersList(),
+   CurrentOption = "",
+   Flag = "PlayerDropdown",
+   Callback = function(Option)
+      selectedPlayer = Option
    end,
 })
+
+-- עדכון אוטומטי של הרשימה כשמישהו נכנס/יוצא
+game.Players.PlayerAdded:Connect(function()
+    PlayerDropdown:Refresh(getPlayersList(), true)
+end)
+game.Players.PlayerRemoving:Connect(function()
+    PlayerDropdown:Refresh(getPlayersList(), true)
+end)
 
 TeleportTab:CreateButton({
-   Name = "Teleport Now",
+   Name = "Teleport to Selected Player",
    Callback = function()
-      local players = game:GetService("Players")
-      local localChar = players.LocalPlayer.Character
-      for _, p in pairs(players:GetPlayers()) do
-         if string.find(string.lower(p.Name), string.lower(targetPlayer)) or string.find(string.lower(p.DisplayName), string.lower(targetPlayer)) then
-            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localChar then
-               localChar.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-               Rayfield:Notify({Title = "Success", Content = "Teleported to " .. p.DisplayName, Duration = 3})
-               return
-            end
+      if selectedPlayer ~= "" then
+         local target = game.Players:FindFirstChild(selectedPlayer)
+         local localChar = game.Players.LocalPlayer.Character
+         if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and localChar then
+            localChar.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+            Rayfield:Notify({Title = "Success", Content = "Teleported to " .. selectedPlayer, Duration = 3})
          end
+      else
+         Rayfield:Notify({Title = "Wait!", Content = "Please select a player first!", Duration = 3})
       end
-      Rayfield:Notify({Title = "Error", Content = "Player not found!", Duration = 3})
    end,
 })
 
---- קטגוריית Movement (כאן הוספתי את הכל!) ---
+--- קטגוריית Movement ---
 MovementTab:CreateSection("Character Physicals")
 
--- סליידר מהירות הליכה
 MovementTab:CreateSlider({
    Name = "Walk Speed",
    Range = {0, 1000},
    Increment = 1,
    CurrentValue = 16,
    Callback = function(Value)
-      if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+      if game.Players.LocalPlayer.Character then
          game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
       end
    end,
 })
 
--- סליידר עוצמת קפיצה (התוספת שביקשת!)
 MovementTab:CreateSlider({
    Name = "Jump Power",
    Range = {0, 1000},
    Increment = 1,
    CurrentValue = 50,
    Callback = function(Value)
-      if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+      if game.Players.LocalPlayer.Character then
          game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
          game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
       end
@@ -125,7 +141,6 @@ MovementTab:CreateSlider({
 
 MovementTab:CreateSection("Fly Controls")
 
--- הפעלת תעופה
 MovementTab:CreateToggle({
    Name = "Enable Fly (W,A,S,D)",
    CurrentValue = false,
@@ -135,7 +150,6 @@ MovementTab:CreateToggle({
       local hrp = char:FindFirstChild("HumanoidRootPart")
       if flying and hrp then
          local bv = Instance.new("BodyVelocity", hrp)
-         bv.Name = "FlyVelocity"
          bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
          task.spawn(function()
             while flying do
@@ -155,7 +169,6 @@ MovementTab:CreateToggle({
    end,
 })
 
--- סליידר מהירות תעופה
 MovementTab:CreateSlider({
    Name = "Fly Speed",
    Range = {0, 1000},
@@ -180,9 +193,8 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- הודעת טעינה סופית
 Rayfield:Notify({
-   Title = "ILhub Updated",
-   Content = "Jump Power, Speed and Fly are ready!",
+   Title = "ILhub Loaded",
+   Content = "Dropdown Teleport is active!",
    Duration = 5,
 })
