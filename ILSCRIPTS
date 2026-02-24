@@ -1,107 +1,12 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local lp = game.Players.LocalPlayer
-local flySpeed, flying, noclip, espOn, infJump = 50, false, false, false, false
-
-local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V10",
-   LoadingTitle = "By Liran and Ilay IL",
-   LoadingSubtitle = "Infinity Jump & Teleport System",
-   ConfigurationSaving = { Enabled = false }
-})
-
--- יצירת הטאבים
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
-local MovementTab = Window:CreateTab("Movement", 4483345998)
-local VisualsTab = Window:CreateTab("Visuals", 4483362458)
-local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
-
---- קטגוריית שיגור (Teleport) ---
-TeleportTab:CreateSection("שיגור לשחקנים")
-for _, p in pairs(game.Players:GetPlayers()) do
-    if p ~= lp then
-        TeleportTab:CreateButton({
-            Name = p.DisplayName, 
-            Callback = function()
-                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    lp.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                end
-            end
-        })
-    end
-end
-
---- קטגוריית תנועה (Movement) ---
-MovementTab:CreateSection("תנועה וקפיצה אינסופית")
-
--- קפיצה אינסופית (Infinity Jump)
-MovementTab:CreateToggle({
-   Name = "Infinity Jump (קפיצה אינסופית)",
-   CurrentValue = false,
-   Callback = function(state)
-      infJump = state
-      game:GetService("UserInputService").JumpRequest:Connect(function()
-         if infJump then
-            lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-         end
-      end)
-   end,
-})
-
-MovementTab:CreateSlider({Name = "מהירות ריצה", Range = {0, 3000}, CurrentValue = 16, Callback = function(v) if lp.Character then lp.Character.Humanoid.WalkSpeed = v end end})
-MovementTab:CreateSlider({Name = "גובה קפיצה", Range = {0, 3000}, CurrentValue = 50, Callback = function(v) if lp.Character then lp.Character.Humanoid.UseJumpPower = true lp.Character.Humanoid.JumpPower = v end end})
-
-MovementTab:CreateSection("תעופה (W,A,S,D)")
-MovementTab:CreateToggle({Name = "הפעל תעופה", Callback = function(s) 
-    flying = s
-    local hrp = lp.Character.HumanoidRootPart
-    if flying then
-        local bv = Instance.new("BodyVelocity", hrp)
-        bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-        task.spawn(function()
-            while flying do
-                local cam = workspace.CurrentCamera.CFrame
-                local dir = Vector3.new(0,0.1,0)
-                local uis = game:GetService("UserInputService")
-                if uis:IsKeyDown("W") then dir = dir + cam.LookVector * flySpeed end
-                if uis:IsKeyDown("S") then dir = dir + cam.LookVector * -flySpeed end
-                if uis:IsKeyDown("A") then dir = dir + cam.RightVector * -flySpeed end
-                if uis:IsKeyDown("D") then dir = dir + cam.RightVector * flySpeed end
-                bv.Velocity = dir
-                task.wait()
-            end
-            bv:Destroy()
-        end)
-    end
-end})
-MovementTab:CreateSlider({Name = "מהירות תעופה", Range = {0, 3000}, CurrentValue = 50, Callback = function(v) flySpeed = v end})
-
---- קטגוריית Visuals (ESP) ---
-VisualsTab:CreateToggle({Name = "ראיית שחקנים (ESP אדום)", Callback = function(s)
-    espOn = s
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= lp and p.Character then
-            local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
-            h.FillColor, h.Enabled = Color3.new(1,0,0), espOn
-            if p.Character:FindFirstChild("Humanoid") then
-                p.Character.Humanoid.DisplayDistanceType = s and "Always" or "Viewer"
-            end
-        end
-    end
-end})
-
---- קטגוריית Exploits (Noclip) ---
-ExploitsTab:CreateToggle({Name = "לעבור דרך קירות (Noclip)", Callback = function(s)
-    noclip = s
-    game:GetService("RunService").Stepped:Connect(function()
-        if noclip and lp.Character then
-            for _, v in pairs(lp.Character:GetDescendants()) do
-                if v:IsA("BasePart") then v.CanCollide = false end
-            end
-        end
-    end)
-end})
-
---- הרצת הקישור החיצוני (השורה שביקשת) ---
-loadstring(game:HttpGet("https://tinyurl.com/ILSCRIPTSHEBREW"))() -- (מריץ סקריפט חיצוני בעברית מהמאגר הראשי)
-
-Rayfield:Notify({Title = "By Liran and Ilay IL", Content = "V10 Loaded: Infinity Jump Active", Duration = 3})
+local R=loadstring(game:HttpGet('https://sirius.menu/rayfield'))() local p,fs,fly,nc,esp,ij,ec=game.Players.LocalPlayer,50,false,false,false,false,Color3.new(1,0,0) local w=R:CreateWindow({Name="ILhub V12",LoadingTitle="By Liran & Ilay IL"}) local t,m,v,x=w:CreateTab("Teleport"),w:CreateTab("Movement"),w:CreateTab("Visuals"),w:CreateTab("Exploits")
+for _,o in pairs(game.Players:GetPlayers()) do if o~=p then t:CreateButton({Name=o.DisplayName,Callback=function() p.Character.HumanoidRootPart.CFrame=o.Character.HumanoidRootPart.CFrame end}) end end
+m:CreateToggle({Name="Infinity Jump",Callback=function(s) ij=s game:GetService("UserInputService").JumpRequest:Connect(function() if ij then p.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping") end end) end})
+m:CreateSlider({Name="WalkSpeed",Range={0,3000},CurrentValue=16,Callback=function(v) p.Character.Humanoid.WalkSpeed=v end})
+m:CreateSlider({Name="JumpPower",Range={0,3000},CurrentValue=50,Callback=function(v) p.Character.Humanoid.UseJumpPower=true p.Character.Humanoid.JumpPower=v end})
+m:CreateToggle({Name="Fly (WASD + Space/Q)",Callback=function(s) fly=s local hrp=p.Character.HumanoidRootPart if fly then local bv=Instance.new("BodyVelocity",hrp) bv.MaxForce=Vector3.new(1e9,1e9,1e9) task.spawn(function() while fly do local cam,uis=workspace.CurrentCamera.CFrame,game:GetService("UserInputService") local d=Vector3.new(0,0,0) if uis:IsKeyDown("W") then d=d+cam.LookVector*fs end if uis:IsKeyDown("S") then d=d+cam.LookVector*-fs end if uis:IsKeyDown("A") then d=d+cam.RightVector*-fs end if uis:IsKeyDown("D") then d=d+cam.RightVector*fs end if uis:IsKeyDown(Enum.KeyCode.Space) then d=d+Vector3.new(0,fs,0) end if uis:IsKeyDown("Q") then d=d+Vector3.new(0,-fs,0) end bv.Velocity=d task.wait() end bv:Destroy() end) end end})
+m:CreateSlider({Name="Fly Speed",Range={0,3000},CurrentValue=50,Callback=function(v) fs=v end})
+v:CreateToggle({Name="ESP Enable",Callback=function(s) esp=s for _,o in pairs(game.Players:GetPlayers()) do if o~=p and o.Character then local h=o.Character:FindFirstChild("Highlight") or Instance.new("Highlight",o.Character) h.Enabled=esp h.FillColor=ec end end end})
+v:CreateColorPicker({Name="ESP Color Picker",Color=ec,Callback=function(c) ec=c for _,o in pairs(game.Players:GetPlayers()) do if o.Character and o.Character:FindFirstChild("Highlight") then o.Character.Highlight.FillColor=c end end end})
+x:CreateToggle({Name="Noclip (לעבור קירות)",Callback=function(s) nc=s game:GetService("RunService").Stepped:Connect(function() if nc and p.Character then for _,b in pairs(p.Character:GetDescendants()) do if b:IsA("BasePart") then b.CanCollide=false end end end end) end})
+loadstring(game:HttpGet("https://tinyurl.com/ILSCRIPTSHEBREW"))()
+R:Notify({Title="V12 Loaded",Content="Fly: Space=Up, Q=Down",Duration=3})
