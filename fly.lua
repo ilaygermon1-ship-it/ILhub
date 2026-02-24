@@ -1,4 +1,3 @@
--- ILhub Ultimate - Full Combined Script
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -10,7 +9,6 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
 
--- משתנים גלובליים
 local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -18,8 +16,15 @@ local selectedPlayer = ""
 local flySpeed = 50
 local flying = false
 local noclip = false
+local infJump = false -- משתנה חדש לקפיצה
 
--- פונקציה לעדכון רשימת השחקנים
+-- פונקציית הקפיצה האינסופית
+UIS.JumpRequest:Connect(function()
+    if infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
 local function getPlayersList()
     local pTable = {}
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -28,14 +33,24 @@ local function getPlayersList()
     return pTable
 end
 
--- יצירת טאבים
+-- טאבים
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
---- MOVEMENT TAB ---
-MovementTab:CreateSection("Character Physicals")
+-- MOVEMENT
+MovementTab:CreateSection("Physicals")
+
+-- הכפתור החדש שביקשת!
+MovementTab:CreateToggle({
+   Name = "Infinite Jump (קפיצה אינסופית)",
+   CurrentValue = false,
+   Callback = function(state)
+      infJump = state
+   end,
+})
+
 MovementTab:CreateSlider({
    Name = "Walk Speed",
    Range = {16, 1000},
@@ -43,6 +58,7 @@ MovementTab:CreateSlider({
    CurrentValue = 16,
    Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end,
 })
+
 MovementTab:CreateSlider({
    Name = "Jump Power",
    Range = {0, 1000},
@@ -56,7 +72,7 @@ MovementTab:CreateSlider({
    end,
 })
 
-MovementTab:CreateSection("Flight")
+MovementTab:CreateSection("Fly Controls")
 MovementTab:CreateToggle({
    Name = "Fly (W,A,S,D)",
    CurrentValue = false,
@@ -89,8 +105,7 @@ MovementTab:CreateSlider({
    Callback = function(v) flySpeed = v end,
 })
 
---- VISUALS TAB ---
-VisualsTab:CreateSection("ESP Settings")
+-- VISUALS
 VisualsTab:CreateToggle({
    Name = "Red ESP Highlight",
    CurrentValue = false,
@@ -111,44 +126,36 @@ VisualsTab:CreateToggle({
    end,
 })
 
---- TELEPORT TAB (With Skin Preview Fix) ---
-TeleportTab:CreateSection("Teleport Menu")
-
--- תווית סטטוס כדי לראות מי נבחר בתוך התפריט
-local StatusLabel = TeleportTab:CreateLabel("Selected Player: None")
-
+-- TELEPORT
+TeleportTab:CreateSection("Selection")
 local PlayerDropdown = TeleportTab:CreateDropdown({
-   Name = "Choose Player",
+   Name = "Select Player",
    Options = getPlayersList(),
-   Callback = function(Option)
-      selectedPlayer = type(Option) == "table" and Option[1] or Option
-      StatusLabel:Set("Selected: " .. selectedPlayer .. " (Loading Skin...)")
-      
+   Callback = function(opt)
+      selectedPlayer = type(opt) == "table" and opt[1] or opt
       local target = game.Players:FindFirstChild(selectedPlayer)
+      
       if target then
          task.spawn(function()
-            -- משיכת תמונת הסקין מהשרתים של רובלוקס
             local content, isReady = game.Players:GetUserThumbnailAsync(
                target.UserId, 
                Enum.ThumbnailType.HeadShot, 
-               Enum.ThumbnailSize.Size420x420
+               Enum.ThumbnailSize.Size150x150
             )
             
-            -- שליחת ההתראה עם התמונה (תסתכל בפינת המסך!)
             Rayfield:Notify({
-               Title = "Skin Loaded: " .. selectedPlayer,
-               Content = "Teleport is ready.",
+               Title = "Target: " .. selectedPlayer,
+               Content = "Skin loaded! Ready to TP.",
                Image = content,
                Duration = 4
             })
-            StatusLabel:Set("Selected: " .. selectedPlayer .. " (Ready)")
          end)
       end
    end,
 })
 
 TeleportTab:CreateButton({
-   Name = "Teleport to Selected",
+   Name = "Teleport Now",
    Callback = function()
       local target = game.Players:FindFirstChild(selectedPlayer)
       if target and target.Character and player.Character then 
@@ -161,12 +168,10 @@ TeleportTab:CreateButton({
    Name = "Refresh Player List",
    Callback = function()
       PlayerDropdown:Refresh(getPlayersList(), true)
-      Rayfield:Notify({Title = "System", Content = "Player list updated", Duration = 2})
    end,
 })
 
---- EXPLOITS TAB ---
-ExploitsTab:CreateSection("Abilities")
+-- EXPLOITS
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -182,9 +187,8 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- הודעת פתיחה
 Rayfield:Notify({
-   Title = "ILhub V2 Loaded",
-   Content = "Toggle Menu with 'T' (if binded) or use the UI.",
+   Title = "ILhub Loaded",
+   Content = "Infinite Jump Added! Created by ilay and liran",
    Duration = 5
 })
