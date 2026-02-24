@@ -3,8 +3,8 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9.5",
-   LoadingTitle = "Ultimate Systems Loading...",
+   Name = "Voidware | ILhub Ultimate V9.6",
+   LoadingTitle = "Fixing Interface...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -50,7 +50,7 @@ local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
 -- MOVEMENT
-MovementTab:CreateSection("Physicals")
+MovementTab:CreateSection("Character Physics")
 
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
@@ -81,11 +81,11 @@ MovementTab:CreateSlider({
    end,
 })
 
-MovementTab:CreateSection("Fly Controls")
+-- יצרתי Section נפרד רק ל-Fly כדי שלא יעלם
+MovementTab:CreateSection("Flight Settings")
 
--- הזזתי את הסליידר לכאן כדי לוודא שהוא מופיע
 MovementTab:CreateSlider({
-   Name = "Fly Speed",
+   Name = "Fly Speed Multiplier",
    Range = {0, 1000},
    Increment = 1,
    CurrentValue = 50,
@@ -119,10 +119,21 @@ MovementTab:CreateToggle({
 })
 
 -- VISUALS
-VisualsTab:CreateSection("ESP Settings")
+VisualsTab:CreateSection("ESP Customization")
+
+VisualsTab:CreateColorPicker({
+    Name = "ESP Color Selector",
+    Color = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        espColor = Value
+        if espEnabled then
+            updateESPColor()
+        end
+    end
+})
 
 VisualsTab:CreateToggle({
-   Name = "Player ESP",
+   Name = "Enable Player ESP",
    CurrentValue = false,
    Callback = function(state)
       espEnabled = state
@@ -145,21 +156,10 @@ VisualsTab:CreateToggle({
    end,
 })
 
-VisualsTab:CreateColorPicker({
-    Name = "ESP Highlight Color",
-    Color = Color3.fromRGB(255, 0, 0),
-    Callback = function(Value)
-        espColor = Value
-        if espEnabled then
-            updateESPColor()
-        end
-    end
-})
-
 -- TELEPORT
-TeleportTab:CreateSection("Selection")
+TeleportTab:CreateSection("Player Selection")
 local PlayerDropdown = TeleportTab:CreateDropdown({
-   Name = "Select Player",
+   Name = "Select Target",
    Options = getPlayersList(),
    Callback = function(opt)
       selectedPlayer = type(opt) == "table" and opt[1] or opt
@@ -167,14 +167,14 @@ local PlayerDropdown = TeleportTab:CreateDropdown({
       if target then
          task.spawn(function()
             local content, isReady = game.Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
-            Rayfield:Notify({Title = "Target Selected", Content = selectedPlayer .. " is ready.", Image = content, Duration = 3})
+            Rayfield:Notify({Title = "Target Selected", Content = selectedPlayer, Image = content, Duration = 3})
          end)
       end
    end,
 })
 
 TeleportTab:CreateButton({
-   Name = "Teleport Now",
+   Name = "Teleport",
    Callback = function()
       local target = game.Players:FindFirstChild(selectedPlayer)
       if target and target.Character and player.Character then 
@@ -184,14 +184,14 @@ TeleportTab:CreateButton({
 })
 
 TeleportTab:CreateButton({
-   Name = "Refresh List",
+   Name = "Refresh Player List",
    Callback = function()
       PlayerDropdown:Refresh(getPlayersList(), true)
    end,
 })
 
 -- EXPLOITS
-ExploitsTab:CreateSection("Character")
+ExploitsTab:CreateSection("Character Mod")
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -208,7 +208,7 @@ ExploitsTab:CreateToggle({
 })
 
 Rayfield:Notify({
-   Title = "Voidware V9.5",
-   Content = "Fly Speed & Color Picker Fixed!",
+   Title = "Voidware V9.6",
+   Content = "Fly Speed & Color Picker are now visible!",
    Duration = 5
 })
