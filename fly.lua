@@ -3,8 +3,8 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate",
-   LoadingTitle = "Loading All Systems...",
+   Name = "Voidware | ILhub Ultimate V9.3",
+   LoadingTitle = "Systems Updating...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -17,17 +17,16 @@ local flySpeed = 50
 local flying = false
 local noclip = false
 local infJump = false
-local espColor = Color3.fromRGB(255, 0, 0) -- צבע ברירת מחדל: אדום
+local espColor = Color3.fromRGB(255, 0, 0)
 local espEnabled = false
 
--- Infinite Jump Logic
+-- Infinite Jump Logic (Clean English)
 UIS.JumpRequest:Connect(function()
     if infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
 end)
 
--- פונקציה לעדכון צבע ה-ESP בזמן אמת
 local function updateESPColor()
     for _, p in pairs(game.Players:GetPlayers()) do
         if p.Character and p.Character:FindFirstChild("ILhub_ESP") then
@@ -108,12 +107,6 @@ MovementTab:CreateToggle({
       end
    end,
 })
-MovementTab:CreateSlider({
-   Name = "Fly Speed",
-   Range = {0, 1000},
-   CurrentValue = 50,
-   Callback = function(v) flySpeed = v end,
-})
 
 -- VISUALS
 VisualsTab:CreateSection("ESP Settings")
@@ -142,9 +135,8 @@ VisualsTab:CreateToggle({
    end,
 })
 
--- בחירת צבע ל-ESP
 VisualsTab:CreateColorPicker({
-    Name = "ESP Color",
+    Name = "ESP Highlight Color",
     Color = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
         espColor = Value
@@ -162,28 +154,17 @@ local PlayerDropdown = TeleportTab:CreateDropdown({
    Callback = function(opt)
       selectedPlayer = type(opt) == "table" and opt[1] or opt
       local target = game.Players:FindFirstChild(selectedPlayer)
-      
       if target then
          task.spawn(function()
-            local content, isReady = game.Players:GetUserThumbnailAsync(
-               target.UserId, 
-               Enum.ThumbnailType.HeadShot, 
-               Enum.ThumbnailSize.Size150x150
-            )
-            
-            Rayfield:Notify({
-               Title = "Target: " .. selectedPlayer,
-               Content = "Skin loaded! Ready to TP.",
-               Image = content,
-               Duration = 4
-            })
+            local content, isReady = game.Players:GetUserThumbnailAsync(target.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+            Rayfield:Notify({Title = "Target Selected", Content = selectedPlayer .. " is ready.", Image = content, Duration = 3})
          end)
       end
    end,
 })
 
 TeleportTab:CreateButton({
-   Name = "Teleport Now",
+   Name = "Teleport to Player",
    Callback = function()
       local target = game.Players:FindFirstChild(selectedPlayer)
       if target and target.Character and player.Character then 
@@ -193,15 +174,14 @@ TeleportTab:CreateButton({
 })
 
 TeleportTab:CreateButton({
-   Name = "Refresh Player List",
+   Name = "Refresh List",
    Callback = function()
       PlayerDropdown:Refresh(getPlayersList(), true)
    end,
 })
 
 -- EXPLOITS
-ExploitsTab:CreateSection("Character Exploits")
-
+ExploitsTab:CreateSection("Character")
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -218,7 +198,7 @@ ExploitsTab:CreateToggle({
 })
 
 Rayfield:Notify({
-   Title = "ILhub Loaded",
-   Content = "ESP Color Picker Added! Created by ilay and liran",
+   Title = "Voidware V9.3",
+   Content = "ESP Color & Infinite Jump Fixed!",
    Duration = 5
 })
