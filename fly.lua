@@ -1,136 +1,33 @@
--- Wait for game to load
+-- Essential check
 if not game:IsLoaded() then game.Loaded:Wait() end
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
--- Window Creation
-local Window = Rayfield:CreateWindow({
-   Name = "ILhub | Survive Lava",
-   LoadingTitle = "ILhub Loading...",
-   LoadingSubtitle = "by Ilay",
-   ConfigurationSaving = { Enabled = true, FolderName = "ILhubConfig", FileName = "MainHub" }
-})
-
--- Variables
-local player = game.Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local flying = false
-local flySpeed = 100
-local bv, bg
-
--- Floating Toggle Button
-local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-ScreenGui.Name = "ILhubFloating"
-
-local FloatingBtn = Instance.new("TextButton", ScreenGui)
-FloatingBtn.Size = UDim2.new(0, 60, 0, 60)
-FloatingBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
-FloatingBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-FloatingBtn.Text = "FLY"
-FloatingBtn.TextColor3 = Color3.new(1, 1, 1)
-FloatingBtn.Font = Enum.Font.GothamBold
-FloatingBtn.TextSize = 14
-local UICorner = Instance.new("UICorner", FloatingBtn)
-UICorner.CornerRadius = UDim.new(1, 0)
-FloatingBtn.Draggable = true
-FloatingBtn.Active = true
-
--- Fly Functions
-local function startFly()
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
-    if bv then bv:Destroy() end
-    if bg then bg:Destroy() end
-    bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    bg = Instance.new("BodyGyro", hrp)
-    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-    bg.P = 9e4
-    RunService:BindToRenderStep("FlyLoop", 200, function()
-        if not flying then return end
-        local cam = workspace.CurrentCamera
-        local direction = Vector3.zero
-        if UIS:IsKeyDown(Enum.KeyCode.W) then direction = direction + cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.S) then direction = direction - cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.A) then direction = direction - cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.D) then direction = direction + cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.Space) then direction = direction + Vector3.new(0, 1, 0) end
-        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then direction = direction - Vector3.new(0, 1, 0) end
-        bv.Velocity = direction.Unit * flySpeed
-        bg.CFrame = cam.CFrame
-    end)
-end
-
-local function stopFly()
-    flying = false
-    RunService:UnbindFromRenderStep("FlyLoop")
-    if bv then bv:Destroy() end
-    if bg then bg:Destroy() end
-end
-
-local function toggleFly(state)
-    flying = state
-    if flying then
-        FloatingBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        startFly()
-    else
-        FloatingBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        stopFly()
-    end
-end
-
-FloatingBtn.MouseButton1Click:Connect(function()
-    toggleFly(not flying)
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 end)
 
--- TABS
-local PlayerTab = Window:CreateTab("Player", 4483362458)
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+if not success then return end
 
--- Player Controls
-PlayerTab:CreateSection("Movement")
-PlayerTab:CreateToggle({
-   Name = "Fly System",
-   CurrentValue = false,
-   Flag = "FlyToggle",
-   Callback = function(Value) toggleFly(Value) end,
+local Window = Rayfield:CreateWindow({
+   Name = "ILhub | Mobile Friendly",
+   LoadingTitle = "Loading...",
+   LoadingSubtitle = "by Ilay",
+   ConfigurationSaving = { Enabled = false }
 })
+
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+
 PlayerTab:CreateSlider({
-   Name = "Fly Speed",
-   Range = {10, 1000},
-   Increment = 1,
-   CurrentValue = 100,
-   Callback = function(Value) flySpeed = Value end,
-})
-PlayerTab:CreateSlider({
-   Name = "Walk Speed",
+   Name = "WalkSpeed",
    Range = {16, 1000},
    Increment = 1,
    CurrentValue = 16,
-   Callback = function(Value)
-      if player.Character and player.Character:FindFirstChild("Humanoid") then
-          player.Character.Humanoid.WalkSpeed = Value
-      end
-   end,
-})
-PlayerTab:CreateSlider({
-   Name = "Jump Power",
-   Range = {50, 1000},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(Value)
-      if player.Character and player.Character:FindFirstChild("Humanoid") then
-          player.Character.Humanoid.UseJumpPower = true
-          player.Character.Humanoid.JumpPower = Value
-      end
+   Callback = function(V) 
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = V 
    end,
 })
 
--- Teleport Controls
-TeleportTab:CreateSection("Target Teleport")
-local targetPlayer = ""
-TeleportTab:CreateInput({
-   Name = "Player Name",
-   PlaceholderText = "Username...",
-   Callback = function(Text) targetPlayer =
+Rayfield:Notify({
+   Title = "Loaded!",
+   Content = "If you see this, the script works!",
+   Duration = 5
+})
