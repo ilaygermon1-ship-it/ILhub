@@ -93,38 +93,41 @@ TeleportTab:CreateButton({
    end,
 })
 
---- קטגוריית Movement (מעודכן עם Jump Power) ---
-MovementTab:CreateSection("Character Controls")
+--- קטגוריית Movement (כאן הוספתי את הכל!) ---
+MovementTab:CreateSection("Character Physicals")
 
+-- סליידר מהירות הליכה
 MovementTab:CreateSlider({
    Name = "Walk Speed",
    Range = {0, 1000},
    Increment = 1,
    CurrentValue = 16,
    Callback = function(Value)
-      if game.Players.LocalPlayer.Character then
+      if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
          game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
       end
    end,
 })
 
+-- סליידר עוצמת קפיצה (התוספת שביקשת!)
 MovementTab:CreateSlider({
    Name = "Jump Power",
    Range = {0, 1000},
    Increment = 1,
    CurrentValue = 50,
    Callback = function(Value)
-      if game.Players.LocalPlayer.Character then
+      if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
          game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
          game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
       end
    end,
 })
 
-MovementTab:CreateSection("Fly Settings")
+MovementTab:CreateSection("Fly Controls")
 
+-- הפעלת תעופה
 MovementTab:CreateToggle({
-   Name = "Fly (W,A,S,D)",
+   Name = "Enable Fly (W,A,S,D)",
    CurrentValue = false,
    Callback = function(state)
       flying = state
@@ -132,6 +135,7 @@ MovementTab:CreateToggle({
       local hrp = char:FindFirstChild("HumanoidRootPart")
       if flying and hrp then
          local bv = Instance.new("BodyVelocity", hrp)
+         bv.Name = "FlyVelocity"
          bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
          task.spawn(function()
             while flying do
@@ -151,6 +155,7 @@ MovementTab:CreateToggle({
    end,
 })
 
+-- סליידר מהירות תעופה
 MovementTab:CreateSlider({
    Name = "Fly Speed",
    Range = {0, 1000},
@@ -175,9 +180,9 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- הודעת סיום
+-- הודעת טעינה סופית
 Rayfield:Notify({
-   Title = "ILhub Loaded",
-   Content = "Movement, Teleport and ESP are ready!",
+   Title = "ILhub Updated",
+   Content = "Jump Power, Speed and Fly are ready!",
    Duration = 5,
 })
