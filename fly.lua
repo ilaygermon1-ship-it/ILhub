@@ -1,106 +1,133 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "ILhub | Survive Lava",
-   LoadingTitle = "ILhub Loading...",
-   LoadingSubtitle = "by Ilay",
+   Name = "Voidware | ILhub Pro",
+   LoadingTitle = "מפעיל את המערכת...",
+   LoadingSubtitle = "Unlimited Power Mode",
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = "ILhubConfig",
-      FileName = "MainHub"
+      FolderName = "ILhub_Configs",
+      FileName = "MainConfig"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "voidware",
+      RememberJoins = true
    }
 })
 
--- משתני תעופה
+-- יצירת הקטגוריות בצד שמאל (כמו בתמונה)
+local MainTab = Window:CreateTab("Main", 4483362458) -- דף הבית
+local MovementTab = Window:CreateTab("Movement", 4483345998) -- תנועה
+local AutomationTab = Window:CreateTab("Automation", 4483362458)
+
+-- משתני שליטה
+local walkSpeed = 16
+local jumpPower = 50
+local flySpeed = 50
 local flying = false
-local flySpeed = 100
-local player = game.Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local bv, bg
 
--- פונקציות ה-Fly
-local function startFly()
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
-    if bv then bv:Destroy() end
-    if bg then bg:Destroy() end
-    bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    bg = Instance.new("BodyGyro", hrp)
-    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-    bg.P = 9e4
-    RunService:BindToRenderStep("FlyLoop", 200, function()
-        if not flying then return end
-        local cam = workspace.CurrentCamera
-        local direction = Vector3.zero
-        if UIS:IsKeyDown(Enum.KeyCode.W) then direction = direction + cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.S) then direction = direction - cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.A) then direction = direction - cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.D) then direction = direction + cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.Space) then direction = direction + Vector3.new(0, 1, 0) end
-        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then direction = direction - Vector3.new(0, 1, 0) end
-        bv.Velocity = direction.Unit * flySpeed
-        bg.CFrame = cam.CFrame
-    end)
-end
+--- קטגוריית תנועה (Movement) ---
 
-local function stopFly()
-    flying = false
-    RunService:UnbindFromRenderStep("FlyLoop")
-    if bv then bv:Destroy() end
-    if bg then bg:Destroy() end
-end
+MovementTab:CreateSection("Character Physicals")
 
-local PlayerTab = Window:CreateTab("Player", 4483362458)
+-- מהירות ריצה ללא הגבלה
+MovementTab:CreateSlider({
+   Name = "Walk Speed",
+   Range = {0, 100000}, -- ללא הגבלה מעשית
+   Increment = 1,
+   Suffix = "Units",
+   CurrentValue = 16,
+   Flag = "WS_Slider",
+   Callback = function(Value)
+      walkSpeed = Value
+      if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+      end
+   end,
+})
 
-PlayerTab:CreateToggle({
+-- גובה קפיצה ללא הגבלה
+MovementTab:CreateSlider({
+   Name = "Jump Power",
+   Range = {0, 100000},
+   Increment = 1,
+   Suffix = "Units",
+   CurrentValue = 50,
+   Flag = "JP_Slider",
+   Callback = function(Value)
+      jumpPower = Value
+      if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+         game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
+         game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+      end
+   end,
+})
+
+MovementTab:CreateSection("Extreme Flying")
+
+-- מהירות תעופה ללא הגבלה
+MovementTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {0, 100000},
+   Increment = 1,
+   Suffix = "Fly V",
+   CurrentValue = 50,
+   Flag = "Fly_Slider",
+   Callback = function(Value)
+      flySpeed = Value
+   end,
+})
+
+-- כפתור הפעלת תעופה
+MovementTab:CreateToggle({
    Name = "Enable Fly",
    CurrentValue = false,
    Flag = "FlyToggle",
-   Callback = function(Value)
-      flying = Value
-      if flying then startFly() else stopFly() end
-   end,
-})
-
-PlayerTab:CreateSlider({
-   Name = "Fly Speed",
-   Range = {10, 1000},
-   Increment = 1,
-   CurrentValue = 100,
-   Callback = function(Value) flySpeed = Value end,
-})
-
-PlayerTab:CreateSlider({
-   Name = "Walk Speed",
-   Range = {16, 1000},
-   Increment = 1,
-   CurrentValue = 16,
-   Callback = function(Value)
-      if player.Character and player.Character:FindFirstChild("Humanoid") then
-          player.Character.Humanoid.WalkSpeed = Value
+   Callback = function(state)
+      flying = state
+      local char = game.Players.LocalPlayer.Character
+      local hrp = char:FindFirstChild("HumanoidRootPart")
+      
+      if flying and hrp then
+         local bv = Instance.new("BodyVelocity")
+         bv.Name = "VoidFly"
+         bv.Parent = hrp
+         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+         bv.Velocity = Vector3.new(0, 0.1, 0)
+         
+         task.spawn(function()
+            while flying do
+               local cam = workspace.CurrentCamera.CFrame
+               local moveDir = Vector3.new(0, 0.1, 0)
+               
+               local uis = game:GetService("UserInputService")
+               if uis:IsKeyDown(Enum.KeyCode.W) then
+                  moveDir = cam.LookVector * flySpeed
+               elseif uis:IsKeyDown(Enum.KeyCode.S) then
+                  moveDir = cam.LookVector * -flySpeed
+               end
+               
+               bv.Velocity = moveDir
+               task.wait()
+            end
+            bv:Destroy()
+         end)
       end
    end,
 })
 
-PlayerTab:CreateSlider({
-   Name = "Jump Power",
-   Range = {50, 1000},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(Value)
-      if player.Character and player.Character:FindFirstChild("Humanoid") then
-          player.Character.Humanoid.UseJumpPower = true
-          player.Character.Humanoid.JumpPower = Value
-      end
+--- דף הבית (Main) ---
+MainTab:CreateButton({
+   Name = "Load External Fly Script",
+   Callback = function()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/ilaygermon1-ship-it/ILhub/refs/heads/main/fly.lua"))()
    end,
 })
 
-local ui_open = true
-UIS.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.T then
-        ui_open = not ui_open
-        if ui_open then Window:Open() else Window:Close() end
-    end
-end)
+MainTab:CreateButton({
+   Name = "Destroy UI",
+   Callback = function()
+      Rayfield:Destroy()
+   end,
+})
