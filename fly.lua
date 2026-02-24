@@ -3,8 +3,8 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9.3",
-   LoadingTitle = "Systems Updating...",
+   Name = "Voidware | ILhub Ultimate V9.4",
+   LoadingTitle = "Fixing Fly Speed...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -20,7 +20,7 @@ local infJump = false
 local espColor = Color3.fromRGB(255, 0, 0)
 local espEnabled = false
 
--- Infinite Jump Logic (Clean English)
+-- Infinite Jump Logic
 UIS.JumpRequest:Connect(function()
     if infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
@@ -82,6 +82,7 @@ MovementTab:CreateSlider({
 })
 
 MovementTab:CreateSection("Fly Controls")
+
 MovementTab:CreateToggle({
    Name = "Fly (W,A,S,D)",
    CurrentValue = false,
@@ -106,6 +107,15 @@ MovementTab:CreateToggle({
          end)
       end
    end,
+})
+
+-- השורה שחזרה עכשיו:
+MovementTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {0, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(v) flySpeed = v end,
 })
 
 -- VISUALS
@@ -164,7 +174,7 @@ local PlayerDropdown = TeleportTab:CreateDropdown({
 })
 
 TeleportTab:CreateButton({
-   Name = "Teleport to Player",
+   Name = "Teleport Now",
    Callback = function()
       local target = game.Players:FindFirstChild(selectedPlayer)
       if target and target.Character and player.Character then 
@@ -198,7 +208,7 @@ ExploitsTab:CreateToggle({
 })
 
 Rayfield:Notify({
-   Title = "Voidware V9.3",
-   Content = "ESP Color & Infinite Jump Fixed!",
+   Title = "Voidware V9.4",
+   Content = "Fly Speed Slider fixed!",
    Duration = 5
 })
