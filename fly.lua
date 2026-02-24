@@ -1,10 +1,10 @@
--- טעינת ספריית העיצוב Rayfield (Voidware Style)
+-- טעינת ספריית העיצוב Rayfield
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Voidware | ILhub Ultimate",
-   LoadingTitle = "טוען ESP ומערכות ראייה...",
-   LoadingSubtitle = "W,A,S,D Fly | ESP | Noclip",
+   LoadingTitle = "Loading Systems...",
+   LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = {
       Enabled = true,
       FolderName = "ILhub_Configs",
@@ -12,30 +12,29 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
--- יצירת הקטגוריות בצד שמאל
+-- יצירת הקטגוריות
 local MainTab = Window:CreateTab("Main", 4483362458)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
+local TeleportTab = Window:CreateTab("Teleport", 4483362458) -- טאב השתגרות חדש
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
 -- משתני שליטה
-local walkSpeed = 16
-local jumpPower = 50
 local flySpeed = 50
 local flying = false
 local noclip = false
 local espEnabled = false
+local targetPlayer = "" -- משתנה לשמירת שם השחקן להשתגרות
 
---- קטגוריית Visuals (ראיית שחקנים) ---
+--- קטגוריית Visuals (ESP) ---
 VisualsTab:CreateSection("Player ESP")
 
 VisualsTab:CreateToggle({
-   Name = "Player ESP (שחקנים באדום + שמות)",
+   Name = "Player ESP (Red Highlight)",
    CurrentValue = false,
    Flag = "ESPToggle",
    Callback = function(state)
       espEnabled = state
-      
       local function createESP(player)
          if player ~= game.Players.LocalPlayer then
             local highlight = Instance.new("Highlight")
@@ -43,27 +42,17 @@ VisualsTab:CreateToggle({
             highlight.FillColor = Color3.fromRGB(255, 0, 0)
             highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
             highlight.FillTransparency = 0.5
-            highlight.OutlineTransparency = 0
             
             local function applyESP()
-               if player.Character then
-                  highlight.Parent = player.Character
-               end
+               if player.Character then highlight.Parent = player.Character end
             end
-            
             applyESP()
             player.CharacterAdded:Connect(applyESP)
          end
       end
 
       if espEnabled then
-         for _, player in pairs(game.Players:GetPlayers()) do
-            createESP(player)
-         end
-         
-         game.Players.PlayerAdded:Connect(function(player)
-            if espEnabled then createESP(player) end
-         end)
+         for _, player in pairs(game.Players:GetPlayers()) do createESP(player) end
       else
          for _, player in pairs(game.Players:GetPlayers()) do
             if player.Character and player.Character:FindFirstChild("ILhub_Highlight") then
@@ -74,12 +63,44 @@ VisualsTab:CreateToggle({
    end,
 })
 
---- קטגוריית תנועה (W,A,S,D Fly + Speed) ---
-MovementTab:CreateSection("Movement Control")
+--- קטגוריית Teleport (חדש!) ---
+TeleportTab:CreateSection("Teleport to Player")
+
+TeleportTab:CreateInput({
+   Name = "Player Name",
+   PlaceholderText = "Enter Username...",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      targetPlayer = Text
+   end,
+})
+
+TeleportTab:CreateButton({
+   Name = "Teleport Now",
+   Callback = function()
+      local players = game:GetService("Players")
+      local localChar = players.LocalPlayer.Character
+      
+      -- חיפוש שחקן (גם אם כתבו רק חלק מהשם)
+      for _, p in pairs(players:GetPlayers()) do
+         if string.find(string.lower(p.Name), string.lower(targetPlayer)) or string.find(string.lower(p.DisplayName), string.lower(targetPlayer)) then
+            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localChar then
+               localChar.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+               Rayfield:Notify({Title = "Success", Content = "Teleported to " .. p.DisplayName, Duration = 3})
+               return
+            end
+         end
+      end
+      Rayfield:Notify({Title = "Error", Content = "Player not found!", Duration = 3})
+   end,
+})
+
+--- קטגוריית Movement ---
+MovementTab:CreateSection("Controls")
 
 MovementTab:CreateSlider({
    Name = "Walk Speed",
-   Range = {0, 3000},
+   Range = {0, 1000},
    Increment = 1,
    CurrentValue = 16,
    Callback = function(Value)
@@ -90,7 +111,7 @@ MovementTab:CreateSlider({
 })
 
 MovementTab:CreateToggle({
-   Name = "Enable Full Fly (W,A,S,D)",
+   Name = "Fly (W,A,S,D)",
    CurrentValue = false,
    Callback = function(state)
       flying = state
@@ -107,7 +128,7 @@ MovementTab:CreateToggle({
                if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.LookVector * flySpeed end
                if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + cam.LookVector * -flySpeed end
                if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + cam.RightVector * -flySpeed end
-               if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.RightVector * flySpeed end
+               if uis:IsKeyDown(Enum.KeyCode.D) then direction = moveDir + cam.RightVector * flySpeed end
                bv.Velocity = moveDir
                task.wait()
             end
@@ -119,13 +140,13 @@ MovementTab:CreateToggle({
 
 MovementTab:CreateSlider({
    Name = "Fly Speed",
-   Range = {0, 3000},
+   Range = {0, 1000},
    Increment = 1,
    CurrentValue = 50,
    Callback = function(Value) flySpeed = Value end,
 })
 
---- קטגוריית Exploits (Noclip) ---
+--- קטגוריית Exploits ---
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -141,8 +162,9 @@ ExploitsTab:CreateToggle({
    end,
 })
 
+-- הודעת סיום
 Rayfield:Notify({
    Title = "ILhub Loaded",
-   Content = "כל המערכות פועלות! תהנה מה-ESP.",
+   Content = "Teleport, Fly and ESP are ready!",
    Duration = 5,
 })
