@@ -1,3 +1,6 @@
+-- Wait for game to load
+if not game:IsLoaded() then game.Loaded:Wait() end
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Window Creation
@@ -16,7 +19,7 @@ local flying = false
 local flySpeed = 100
 local bv, bg
 
--- Floating Toggle Button (Mobile Friendly)
+-- Floating Toggle Button
 local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 ScreenGui.Name = "ILhubFloating"
 
@@ -33,7 +36,7 @@ UICorner.CornerRadius = UDim.new(1, 0)
 FloatingBtn.Draggable = true
 FloatingBtn.Active = true
 
--- Fly Logic
+-- Fly Functions
 local function startFly()
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
@@ -43,4 +46,91 @@ local function startFly()
     bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
     bg = Instance.new("BodyGyro", hrp)
     bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-    bg.P =
+    bg.P = 9e4
+    RunService:BindToRenderStep("FlyLoop", 200, function()
+        if not flying then return end
+        local cam = workspace.CurrentCamera
+        local direction = Vector3.zero
+        if UIS:IsKeyDown(Enum.KeyCode.W) then direction = direction + cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then direction = direction - cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then direction = direction - cam.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then direction = direction + cam.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then direction = direction + Vector3.new(0, 1, 0) end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then direction = direction - Vector3.new(0, 1, 0) end
+        bv.Velocity = direction.Unit * flySpeed
+        bg.CFrame = cam.CFrame
+    end)
+end
+
+local function stopFly()
+    flying = false
+    RunService:UnbindFromRenderStep("FlyLoop")
+    if bv then bv:Destroy() end
+    if bg then bg:Destroy() end
+end
+
+local function toggleFly(state)
+    flying = state
+    if flying then
+        FloatingBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        startFly()
+    else
+        FloatingBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        stopFly()
+    end
+end
+
+FloatingBtn.MouseButton1Click:Connect(function()
+    toggleFly(not flying)
+end)
+
+-- TABS
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+local TeleportTab = Window:CreateTab("Teleport", 4483362458)
+
+-- Player Controls
+PlayerTab:CreateSection("Movement")
+PlayerTab:CreateToggle({
+   Name = "Fly System",
+   CurrentValue = false,
+   Flag = "FlyToggle",
+   Callback = function(Value) toggleFly(Value) end,
+})
+PlayerTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {10, 1000},
+   Increment = 1,
+   CurrentValue = 100,
+   Callback = function(Value) flySpeed = Value end,
+})
+PlayerTab:CreateSlider({
+   Name = "Walk Speed",
+   Range = {16, 1000},
+   Increment = 1,
+   CurrentValue = 16,
+   Callback = function(Value)
+      if player.Character and player.Character:FindFirstChild("Humanoid") then
+          player.Character.Humanoid.WalkSpeed = Value
+      end
+   end,
+})
+PlayerTab:CreateSlider({
+   Name = "Jump Power",
+   Range = {50, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(Value)
+      if player.Character and player.Character:FindFirstChild("Humanoid") then
+          player.Character.Humanoid.UseJumpPower = true
+          player.Character.Humanoid.JumpPower = Value
+      end
+   end,
+})
+
+-- Teleport Controls
+TeleportTab:CreateSection("Target Teleport")
+local targetPlayer = ""
+TeleportTab:CreateInput({
+   Name = "Player Name",
+   PlaceholderText = "Username...",
+   Callback = function(Text) targetPlayer =
