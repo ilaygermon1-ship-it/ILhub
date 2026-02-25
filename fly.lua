@@ -1,13 +1,13 @@
--- ניקוי משתנים קודמים כדי לוודא שהסקריפט ייפתח
+-- איפוס משתנים למניעת באגים
 _G.VoidwareLoaded = nil 
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Voidware | ILhub Ultimate V9.9",
-   LoadingTitle = "Fixing Stability...",
-   LoadingSubtitle = "by ilay and liran",
-   ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
+    Name = "Voidware | ILhub Ultimate V9.9",
+    LoadingTitle = "Fixing Stability...",
+    LoadingSubtitle = "by ilay and liran",
+    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
 
 local player = game.Players.LocalPlayer
@@ -27,14 +27,26 @@ UIS.JumpRequest:Connect(function()
     end
 end)
 
--- Tabs
+-- פונקציה לעדכון צבע ESP
+local function updateESPColor()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChild("ILhub_ESP") then
+            p.Character.ILhub_ESP.FillColor = espColor
+        end
+    end
+end
+
+-- טאבים (בסדר שביקשת)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
---- MOVEMENT ---
+-- ==========================================
+-- MOVEMENT SECTION
+-- ==========================================
 MovementTab:CreateSection("Physicals")
+
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
@@ -43,7 +55,7 @@ MovementTab:CreateToggle({
 
 MovementTab:CreateSlider({
    Name = "Walk Speed",
-   Range = {16, 500},
+   Range = {16, 1000},
    Increment = 1,
    CurrentValue = 16,
    Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end,
@@ -51,7 +63,7 @@ MovementTab:CreateSlider({
 
 MovementTab:CreateSlider({
    Name = "Jump Power",
-   Range = {0, 500},
+   Range = {0, 1000},
    Increment = 1,
    CurrentValue = 50,
    Callback = function(v) 
@@ -62,29 +74,79 @@ MovementTab:CreateSlider({
    end,
 })
 
---- TELEPORT ---
+MovementTab:CreateSection("Flight Settings")
+
+MovementTab:CreateSlider({
+   Name = "Fly Speed",
+   Range = {0, 1000},
+   Increment = 1,
+   CurrentValue = 50,
+   Callback = function(v) flySpeed = v end,
+})
+
+MovementTab:CreateToggle({
+   Name = "Fly (W,A,S,D)",
+   CurrentValue = false,
+   Callback = function(state)
+      flying = state
+      if flying and player.Character then
+         local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+         local bv = Instance.new("BodyVelocity", hrp)
+         bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+         task.spawn(function()
+            while flying do
+               local cam = workspace.CurrentCamera.CFrame
+               local dir = Vector3.new(0, 0.1, 0)
+               if UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cam.LookVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cam.LookVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cam.RightVector * flySpeed end
+               if UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + cam.RightVector * flySpeed end
+               bv.Velocity = dir
+               task.wait()
+            end
+            bv:Destroy()
+         end)
+      end
+   end,
+})
+
+-- ==========================================
+-- TELEPORT SECTION
+-- ==========================================
 TeleportTab:CreateSection("Active Players")
+
 TeleportTab:CreateButton({
-    Name = "Refresh Player List",
+    Name = "Refresh Player List (TP)",
     Callback = function()
-        -- פונקציה לריענון הרשימה במידה ושחקנים הצטרפו
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= player then
                 TeleportTab:CreateButton({
-                    Name = "TP to: " .. p.DisplayName,
+                    Name = "Teleport to: " .. p.DisplayName,
                     Callback = function()
                         if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                             player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
                         end
-                    end
+                    end,
                 })
             end
         end
+    end,
+})
+
+-- ==========================================
+-- VISUALS SECTION
+-- ==========================================
+VisualsTab:CreateSection("ESP Customization")
+
+VisualsTab:CreateColorPicker({
+    Name = "ESP Highlight Color",
+    Color = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        espColor = Value
+        if espEnabled then updateESPColor() end
     end
 })
 
---- VISUALS ---
-VisualsTab:CreateSection("ESP")
 VisualsTab:CreateToggle({
    Name = "Enable Player ESP",
    CurrentValue = false,
@@ -109,9 +171,12 @@ VisualsTab:CreateToggle({
    end,
 })
 
---- EXPLOITS ---
+-- ==========================================
+-- EXPLOITS SECTION
+-- ==========================================
 ExploitsTab:CreateSection("Character Mod")
 
+-- Noclip
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -127,33 +192,48 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- היעלמות בטוחה ללא שגיאות
+-- היעלמות (Invisibility) - גרסה אנגלית יציבה
 ExploitsTab:CreateButton({
-    Name = "Invisibility (English)",
+    Name = "Invisibility (Invisible Mode)",
     Callback = function()
-        local char = player.Character
-        if char then
-            pcall(function()
-                -- שיטה שעובדת על רוב סוגי השחקנים
-                local rootJoint = char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart:FindFirstChild("RootJoint")
-                if rootJoint then
-                    rootJoint:Destroy()
-                    Rayfield:Notify({Title = "Invisibility", Content = "You are now invisible! Reset to undo.", Duration = 4})
-                else
-                    -- ניסיון לשיטת R15
-                    local lowerTorsoRoot = char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root")
-                    if lowerTorsoRoot then
-                        lowerTorsoRoot:Destroy()
-                        Rayfield:Notify({Title = "Invisibility", Content = "Invisible mode active.", Duration = 4})
-                    end
+        pcall(function()
+            local char = player.Character
+            if not char then return end
+            
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- שיטה שעוקפת שרתים: מנתקת את ה-Joint המרכזי
+                if char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root") then
+                    char.LowerTorso.Root:Destroy() -- R15
+                elseif hrp:FindFirstChild("RootJoint") then
+                    hrp.RootJoint:Destroy() -- R6
                 end
-            end)
-        end
+                
+                Rayfield:Notify({
+                    Title = "Invisible Mode",
+                    Content = "You are now invisible! Reset character to become visible.",
+                    Duration = 5
+                })
+            end
+        end)
+    end,
+})
+
+ExploitsTab:CreateSection("Server Utils")
+ExploitsTab:CreateButton({
+    Name = "Anti-AFK (Stay Connected)",
+    Callback = function()
+        local virtualUser = game:GetService("VirtualUser")
+        player.Idled:Connect(function()
+            virtualUser:CaptureController()
+            virtualUser:ClickButton2(Vector2.new())
+        end)
+        Rayfield:Notify({Title = "Anti-AFK", Content = "Enabled", Duration = 2})
     end,
 })
 
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Script Loaded Successfully!",
+   Content = "Fully Loaded with Invisibility!",
    Duration = 5
 })
