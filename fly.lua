@@ -40,7 +40,7 @@ local function updateESPColor()
     end
 end
 
--- Tabs (סדר הטאבים נשאר כפי שביקשת)
+-- Tabs
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
@@ -74,7 +74,7 @@ MovementTab:CreateSlider({
       if player.Character then 
          player.Character.Humanoid.UseJumpPower = true
          player.Character.Humanoid.JumpPower = v 
-      end 
+      end  
    end,
 })
 
