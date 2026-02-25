@@ -147,24 +147,6 @@ VisualsTab:CreateToggle({
    end,
 })
 
--- EXPLOITS (Noclip בלבד - ההיעלמות הוסרה!)
-ExploitsTab:CreateSection("Character Mod")
-
-ExploitsTab:CreateToggle({
-   Name = "Noclip",
-   CurrentValue = false,
-   Callback = function(state)
-      noclip = state
-      RunService.Stepped:Connect(function()
-         if noclip and player.Character then
-            for _, v in pairs(player.Character:GetDescendants()) do
-               if v:IsA("BasePart") then v.CanCollide = false end
-            end
-         end
-      end)
-   end,
-})
-
 -- SCRIPT CONTROL (כפתור מחיקה)
 ControlTab:CreateSection("Danger Zone")
 
