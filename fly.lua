@@ -40,21 +40,19 @@ local function updateESPColor()
     end
 end
 
--- Tabs
+-- Tabs (בסדר שביקשת)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
--- MOVEMENT
+--- MOVEMENT SECTION ---
 MovementTab:CreateSection("Physicals")
 
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
-   Callback = function(state)
-      infJump = state
-   end,
+   Callback = function(state) infJump = state end,
 })
 
 MovementTab:CreateSlider({
@@ -114,7 +112,7 @@ MovementTab:CreateToggle({
    end,
 })
 
--- TELEPORT
+--- TELEPORT SECTION ---
 TeleportTab:CreateSection("Active Players")
 
 local function RefreshTPList()
@@ -138,7 +136,7 @@ local function RefreshTPList()
 end
 RefreshTPList()
 
--- VISUALS
+--- VISUALS SECTION ---
 VisualsTab:CreateSection("ESP Customization")
 
 VisualsTab:CreateColorPicker({
@@ -146,9 +144,7 @@ VisualsTab:CreateColorPicker({
     Color = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
         espColor = Value
-        if espEnabled then
-            updateESPColor()
-        end
+        if espEnabled then updateESPColor() end
     end
 })
 
@@ -176,7 +172,7 @@ VisualsTab:CreateToggle({
    end,
 })
 
--- EXPLOITS
+--- EXPLOITS SECTION ---
 ExploitsTab:CreateSection("Character Mod")
 
 ExploitsTab:CreateToggle({
@@ -194,33 +190,38 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- הוספת ה-Invisibility כאן
-ExploitsTab:CreateToggle({
-    Name = "Invisibility",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then
-            -- שיטת היעלמות יציבה (Desync)
-            if player.Character and player.Character:FindFirstChild("LowerTorso") then
-                player.Character.LowerTorso.RootGraphic:Destroy()
+-- פונקציית Invisibility יציבה ללא שגיאות
+ExploitsTab:CreateButton({
+    Name = "Invisible (Semi-Permanent)",
+    Callback = function()
+        pcall(function()
+            local char = player.Character
+            if not char then return end
+            
+            -- בדיקה לסוגי דמויות שונים (R15 / R6)
+            local root = char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root") 
+                         or char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart:FindFirstChild("RootJoint")
+
+            if root then
+                root:Destroy()
                 Rayfield:Notify({
-                    Title = "Invisible Enabled",
-                    Content = "You are now invisible to others. (Requires Reset to undo)",
-                    Duration = 4
+                    Title = "Success",
+                    Content = "Invisibility Active! Others can't see you. (Reset to undo)",
+                    Duration = 5
                 })
             else
                 Rayfield:Notify({
                     Title = "Error",
-                    Content = "Character must be R15 for this method.",
+                    Content = "Could not execute. Try while standing still.",
                     Duration = 3
                 })
             end
-        end
+        end)
     end,
 })
 
 Rayfield:Notify({
-   Title = "Voidware V9.9",
-   Content = "Stability Fixed - Invisibility Added.",
+   Title = "Voidware V9.9 Loaded",
+   Content = "Stability Fixed | Invisibility Added",
    Duration = 5
 })
