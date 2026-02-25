@@ -26,7 +26,7 @@ local espColor = Color3.fromRGB(255, 0, 0)
 local espEnabled = false
 
 -- Infinite Jump Logic
-local jumpConnection = UIS.JumpRequest:Connect(function()
+local jumpConn = UIS.JumpRequest:Connect(function()
     if infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
@@ -45,7 +45,7 @@ local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
-local SettingsTab = Window:CreateTab("Settings", 4483362458) -- טאב לסגירה
+local ControlTab = Window:CreateTab("Script Control", 4483362458) -- טאב לסגירה
 
 -- MOVEMENT
 MovementTab:CreateSection("Physicals")
@@ -107,7 +107,7 @@ MovementTab:CreateToggle({
                bv.Velocity = dir
                task.wait()
             end
-            bv:Destroy()
+            if bv then bv:Destroy() end
          end)
       end
    end,
@@ -124,11 +124,6 @@ local function RefreshTPList()
                 Callback = function()
                     if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                        Rayfield:Notify({
-                            Title = "Teleported",
-                            Content = "Arrived at " .. p.Name,
-                            Duration = 2
-                        })
                     end
                 end,
             })
@@ -139,15 +134,6 @@ RefreshTPList()
 
 -- VISUALS
 VisualsTab:CreateSection("ESP Customization")
-
-VisualsTab:CreateColorPicker({
-    Name = "ESP Highlight Color",
-    Color = Color3.fromRGB(255, 0, 0),
-    Callback = function(Value)
-        espColor = Value
-        if espEnabled then updateESPColor() end
-    end
-})
 
 VisualsTab:CreateToggle({
    Name = "Enable Player ESP",
@@ -165,9 +151,7 @@ VisualsTab:CreateToggle({
          end
       else
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
-               p.Character.ILhub_ESP:Destroy() 
-            end
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
          end
       end
    end,
@@ -191,54 +175,50 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- הוספת היעלמות (Invisibility)
+-- היעלמות (Invisibility)
 ExploitsTab:CreateButton({
     Name = "Invisibility (Invisible Mode)",
     Callback = function()
         pcall(function()
             local char = player.Character
-            if char then
-                local root = char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root") 
-                             or char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart:FindFirstChild("RootJoint")
-                if root then
-                    root:Destroy()
-                    Rayfield:Notify({Title = "Invisible", Content = "Others can't see you! (Reset to undo)", Duration = 4})
-                end
+            local root = char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root") 
+                         or char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart:FindFirstChild("RootJoint")
+            if root then
+                root:Destroy()
+                Rayfield:Notify({Title = "Invisible", Content = "Others can't see you! (Reset to undo)", Duration = 4})
             end
         end)
     end,
 })
 
--- SETTINGS (סגירה לתמיד)
-SettingsTab:CreateSection("Destruction")
+-- SCRIPT CONTROL (הטאב עם כפתור המחיקה)
+ControlTab:CreateSection("Danger Zone")
 
-SettingsTab:CreateButton({
-   Name = "Destroy Script (Close Forever)",
+ControlTab:CreateButton({
+   Name = "DESTROY SCRIPT (Close Forever)",
    Callback = function()
-      _G.VoidwareLoaded = nil -- מאפשר להריץ שוב בעתיד
+      _G.VoidwareLoaded = nil -- מאפשר להריץ שוב
       infJump = false
       noclip = false
       flying = false
       
-      -- ניקוי ESP
+      -- ניקוי ESP לפני סגירה
       for _, p in pairs(game.Players:GetPlayers()) do
-         if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
-            p.Character.ILhub_ESP:Destroy() 
-         end
+         if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
       end
       
-      -- ניקוי ה-Jump Connection
-      if jumpConnection then jumpConnection:Disconnect() end
+      -- ניקוי חיבורים
+      if jumpConn then jumpConn:Disconnect() end
       
-      -- סגירת התפריט
+      -- סגירה מוחלטת של ה-GUI
       Rayfield:Destroy()
       
-      print("Voidware Unloaded Successfully.")
+      print("ILhub V9.9 Unloaded.")
    end,
 })
 
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Everything Connected - Enjoy!",
+   Content = "Stability Fixed - Close Button in 'Script Control' Tab.",
    Duration = 5
 })
