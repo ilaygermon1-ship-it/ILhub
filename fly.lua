@@ -26,7 +26,7 @@ local espColor = Color3.fromRGB(255, 0, 0)
 local espEnabled = false
 
 -- Infinite Jump Logic
-UIS.JumpRequest:Connect(function()
+local jumpConnection = UIS.JumpRequest:Connect(function()
     if infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
@@ -40,11 +40,12 @@ local function updateESPColor()
     end
 end
 
--- Tabs (סדר הטאבים נשאר כפי שביקשת)
+-- Tabs
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
+local SettingsTab = Window:CreateTab("Settings", 4483362458) -- טאב לסגירה
 
 -- MOVEMENT
 MovementTab:CreateSection("Physicals")
@@ -52,9 +53,7 @@ MovementTab:CreateSection("Physicals")
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
-   Callback = function(state)
-      infJump = state
-   end,
+   Callback = function(state) infJump = state end,
 })
 
 MovementTab:CreateSlider({
@@ -74,7 +73,7 @@ MovementTab:CreateSlider({
       if player.Character then 
          player.Character.Humanoid.UseJumpPower = true
          player.Character.Humanoid.JumpPower = v 
-      end 
+      end  
    end,
 })
 
@@ -146,9 +145,7 @@ VisualsTab:CreateColorPicker({
     Color = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
         espColor = Value
-        if espEnabled then
-            updateESPColor()
-        end
+        if espEnabled then updateESPColor() end
     end
 })
 
@@ -178,6 +175,7 @@ VisualsTab:CreateToggle({
 
 -- EXPLOITS
 ExploitsTab:CreateSection("Character Mod")
+
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -193,8 +191,54 @@ ExploitsTab:CreateToggle({
    end,
 })
 
+-- הוספת היעלמות (Invisibility)
+ExploitsTab:CreateButton({
+    Name = "Invisibility (Invisible Mode)",
+    Callback = function()
+        pcall(function()
+            local char = player.Character
+            if char then
+                local root = char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root") 
+                             or char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart:FindFirstChild("RootJoint")
+                if root then
+                    root:Destroy()
+                    Rayfield:Notify({Title = "Invisible", Content = "Others can't see you! (Reset to undo)", Duration = 4})
+                end
+            end
+        end)
+    end,
+})
+
+-- SETTINGS (סגירה לתמיד)
+SettingsTab:CreateSection("Destruction")
+
+SettingsTab:CreateButton({
+   Name = "Destroy Script (Close Forever)",
+   Callback = function()
+      _G.VoidwareLoaded = nil -- מאפשר להריץ שוב בעתיד
+      infJump = false
+      noclip = false
+      flying = false
+      
+      -- ניקוי ESP
+      for _, p in pairs(game.Players:GetPlayers()) do
+         if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
+            p.Character.ILhub_ESP:Destroy() 
+         end
+      end
+      
+      -- ניקוי ה-Jump Connection
+      if jumpConnection then jumpConnection:Disconnect() end
+      
+      -- סגירת התפריט
+      Rayfield:Destroy()
+      
+      print("Voidware Unloaded Successfully.")
+   end,
+})
+
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Stability Fixed - Script won't auto-close.",
+   Content = "Everything Connected - Enjoy!",
    Duration = 5
 })
