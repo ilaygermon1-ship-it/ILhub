@@ -1,7 +1,5 @@
--- בדיקה אם הסקריפט כבר רץ כדי למנוע את באג הסגירה
-if _G.VoidwareLoaded then 
-    return 
-end
+-- איפוס המשתנה כדי להבטיח טעינה חלקה
+_G.VoidwareLoaded = nil
 _G.VoidwareLoaded = true
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -31,14 +29,6 @@ local jumpConn = UIS.JumpRequest:Connect(function()
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
 end)
-
-local function updateESPColor()
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p.Character and p.Character:FindFirstChild("ILhub_ESP") then
-            p.Character.ILhub_ESP.FillColor = espColor
-        end
-    end
-end
 
 -- Tabs
 local MovementTab = Window:CreateTab("Movement", 4483345998)
@@ -157,7 +147,7 @@ VisualsTab:CreateToggle({
    end,
 })
 
--- EXPLOITS
+-- EXPLOITS (Noclip בלבד - ההיעלמות הוסרה!)
 ExploitsTab:CreateSection("Character Mod")
 
 ExploitsTab:CreateToggle({
@@ -175,7 +165,7 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- SCRIPT CONTROL (כפתור המחיקה)
+-- SCRIPT CONTROL (כפתור מחיקה)
 ControlTab:CreateSection("Danger Zone")
 
 ControlTab:CreateButton({
@@ -186,19 +176,22 @@ ControlTab:CreateButton({
       noclip = false
       flying = false
       
+      -- ניקוי ESP
       for _, p in pairs(game.Players:GetPlayers()) do
          if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
       end
       
+      -- ניקוי חיבורים
       if jumpConn then jumpConn:Disconnect() end
       
+      -- סגירת התפריט
       Rayfield:Destroy()
-      print("ILhub V9.9 Unloaded.")
+      warn("ILhub Unloaded.")
    end,
 })
 
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Invisible removed. Script Control tab active.",
+   Content = "Invisible Removed. Destroy button in Script Control tab.",
    Duration = 5
 })
