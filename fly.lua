@@ -45,7 +45,7 @@ local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
-local ControlTab = Window:CreateTab("Script Control", 4483362458) -- טאב לסגירה
+local ControlTab = Window:CreateTab("Script Control", 4483362458)
 
 -- MOVEMENT
 MovementTab:CreateSection("Physicals")
@@ -174,34 +174,31 @@ ExploitsTab:CreateToggle({
       end)
    end,
 })
--- SCRIPT CONTROL (הטאב עם כפתור המחיקה)
+
+-- SCRIPT CONTROL (כפתור המחיקה)
 ControlTab:CreateSection("Danger Zone")
 
 ControlTab:CreateButton({
    Name = "DESTROY SCRIPT (Close Forever)",
    Callback = function()
-      _G.VoidwareLoaded = nil -- מאפשר להריץ שוב
+      _G.VoidwareLoaded = nil 
       infJump = false
       noclip = false
       flying = false
       
-      -- ניקוי ESP לפני סגירה
       for _, p in pairs(game.Players:GetPlayers()) do
          if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
       end
       
-      -- ניקוי חיבורים
       if jumpConn then jumpConn:Disconnect() end
       
-      -- סגירה מוחלטת של ה-GUI
       Rayfield:Destroy()
-      
       print("ILhub V9.9 Unloaded.")
    end,
 })
 
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Stability Fixed - Close Button in 'Script Control' Tab.",
+   Content = "Invisible removed. Script Control tab active.",
    Duration = 5
 })
