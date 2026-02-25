@@ -1,10 +1,16 @@
+-- בדיקה אם הסקריפט כבר רץ כדי למנוע את באג הסגירה
+if _G.VoidwareLoaded then 
+    return 
+end
+_G.VoidwareLoaded = true
+
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Voidware | ILhub Ultimate V9.9",
-   LoadingTitle = "Interface Force Update...",
+   LoadingTitle = "Fixing Stability...",
    LoadingSubtitle = "by ilay and liran",
    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
@@ -34,19 +40,21 @@ local function updateESPColor()
     end
 end
 
--- TABS ORDER (שיניתי כאן את הסדר - Movement עכשיו ראשון)
+-- Tabs
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
---- MOVEMENT TAB ---
+-- MOVEMENT
 MovementTab:CreateSection("Physicals")
 
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
-   Callback = function(state) infJump = state end,
+   Callback = function(state)
+      infJump = state
+   end,
 })
 
 MovementTab:CreateSlider({
@@ -66,7 +74,7 @@ MovementTab:CreateSlider({
       if player.Character then 
          player.Character.Humanoid.UseJumpPower = true
          player.Character.Humanoid.JumpPower = v 
-      end 
+      end  
    end,
 })
 
@@ -106,8 +114,8 @@ MovementTab:CreateToggle({
    end,
 })
 
---- TELEPORT TAB ---
-TeleportTab:CreateSection("Player List (One Click TP)")
+-- TELEPORT
+TeleportTab:CreateSection("Active Players")
 
 local function RefreshTPList()
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -117,7 +125,11 @@ local function RefreshTPList()
                 Callback = function()
                     if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                        Rayfield:Notify({Title = "Teleported", Content = "Arrived at " .. p.Name, Duration = 2})
+                        Rayfield:Notify({
+                            Title = "Teleported",
+                            Content = "Arrived at " .. p.Name,
+                            Duration = 2
+                        })
                     end
                 end,
             })
@@ -126,7 +138,7 @@ local function RefreshTPList()
 end
 RefreshTPList()
 
---- VISUALS TAB ---
+-- VISUALS
 VisualsTab:CreateSection("ESP Customization")
 
 VisualsTab:CreateColorPicker({
@@ -134,7 +146,9 @@ VisualsTab:CreateColorPicker({
     Color = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
         espColor = Value
-        if espEnabled then updateESPColor() end
+        if espEnabled then
+            updateESPColor()
+        end
     end
 })
 
@@ -154,32 +168,59 @@ VisualsTab:CreateToggle({
          end
       else
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
+               p.Character.ILhub_ESP:Destroy() 
+            end
          end
       end
    end,
 })
 
---- EXPLOITS TAB ---
+-- EXPLOITS
 ExploitsTab:CreateSection("Character Mod")
+
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
    Callback = function(state)
-      nc_conn = RunService.Stepped:Connect(function()
-         if state and player.Character then
+      noclip = state
+      RunService.Stepped:Connect(function()
+         if noclip and player.Character then
             for _, v in pairs(player.Character:GetDescendants()) do
                if v:IsA("BasePart") then v.CanCollide = false end
             end
-         elseif not state and nc_conn then
-            nc_conn:Disconnect()
          end
       end)
    end,
 })
 
+-- הוספת ה-Invisibility כאן
+ExploitsTab:CreateToggle({
+    Name = "Invisibility",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            -- שיטת היעלמות יציבה (Desync)
+            if player.Character and player.Character:FindFirstChild("LowerTorso") then
+                player.Character.LowerTorso.RootGraphic:Destroy()
+                Rayfield:Notify({
+                    Title = "Invisible Enabled",
+                    Content = "You are now invisible to others. (Requires Reset to undo)",
+                    Duration = 4
+                })
+            else
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "Character must be R15 for this method.",
+                    Duration = 3
+                })
+            end
+        end
+    end,
+})
+
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Tabs reordered: Movement is now first!",
+   Content = "Stability Fixed - Invisibility Added.",
    Duration = 5
 })
