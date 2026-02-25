@@ -1,3 +1,4 @@
+-- בדיקה אם הסקריפט כבר רץ כדי למנוע את באג הסגירה
 if _G.VoidwareLoaded then 
     return 
 end
