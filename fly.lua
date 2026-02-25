@@ -1,13 +1,18 @@
--- איפוס משתנים למניעת באגים
-_G.VoidwareLoaded = nil 
+-- בדיקה אם הסקריפט כבר רץ כדי למנוע את באג הסגירה
+if _G.VoidwareLoaded then 
+    return 
+end
+_G.VoidwareLoaded = true
+
+if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "Voidware | ILhub Ultimate V9.9",
-    LoadingTitle = "Fixing Stability...",
-    LoadingSubtitle = "by ilay and liran",
-    ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
+   Name = "Voidware | ILhub Ultimate V9.9",
+   LoadingTitle = "Fixing Stability...",
+   LoadingSubtitle = "by ilay and liran",
+   ConfigurationSaving = { Enabled = true, FolderName = "ILhub_Configs", FileName = "Main" }
 })
 
 local player = game.Players.LocalPlayer
@@ -27,7 +32,6 @@ UIS.JumpRequest:Connect(function()
     end
 end)
 
--- פונקציה לעדכון צבע ESP
 local function updateESPColor()
     for _, p in pairs(game.Players:GetPlayers()) do
         if p.Character and p.Character:FindFirstChild("ILhub_ESP") then
@@ -36,21 +40,21 @@ local function updateESPColor()
     end
 end
 
--- טאבים (בסדר שביקשת)
+-- Tabs
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
 local ExploitsTab = Window:CreateTab("Exploits", 4483362458)
 
--- ==========================================
--- MOVEMENT SECTION
--- ==========================================
+-- MOVEMENT
 MovementTab:CreateSection("Physicals")
 
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
-   Callback = function(state) infJump = state end,
+   Callback = function(state)
+      infJump = state
+   end,
 })
 
 MovementTab:CreateSlider({
@@ -110,32 +114,31 @@ MovementTab:CreateToggle({
    end,
 })
 
--- ==========================================
--- TELEPORT SECTION
--- ==========================================
+-- TELEPORT
 TeleportTab:CreateSection("Active Players")
 
-TeleportTab:CreateButton({
-    Name = "Refresh Player List (TP)",
-    Callback = function()
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= player then
-                TeleportTab:CreateButton({
-                    Name = "Teleport to: " .. p.DisplayName,
-                    Callback = function()
-                        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                        end
-                    end,
-                })
-            end
+local function RefreshTPList()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            TeleportTab:CreateButton({
+                Name = "Teleport to: " .. p.Name,
+                Callback = function()
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+                        Rayfield:Notify({
+                            Title = "Teleported",
+                            Content = "Arrived at " .. p.Name,
+                            Duration = 2
+                        })
+                    end
+                end,
+            })
         end
-    end,
-})
+    end
+end
+RefreshTPList()
 
--- ==========================================
--- VISUALS SECTION
--- ==========================================
+-- VISUALS
 VisualsTab:CreateSection("ESP Customization")
 
 VisualsTab:CreateColorPicker({
@@ -143,7 +146,9 @@ VisualsTab:CreateColorPicker({
     Color = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
         espColor = Value
-        if espEnabled then updateESPColor() end
+        if espEnabled then
+            updateESPColor()
+        end
     end
 })
 
@@ -171,12 +176,9 @@ VisualsTab:CreateToggle({
    end,
 })
 
--- ==========================================
--- EXPLOITS SECTION
--- ==========================================
+-- EXPLOITS
 ExploitsTab:CreateSection("Character Mod")
 
--- Noclip
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -192,48 +194,33 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- היעלמות (Invisibility) - גרסה אנגלית יציבה
-ExploitsTab:CreateButton({
-    Name = "Invisibility (Invisible Mode)",
-    Callback = function()
-        pcall(function()
-            local char = player.Character
-            if not char then return end
-            
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                -- שיטה שעוקפת שרתים: מנתקת את ה-Joint המרכזי
-                if char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root") then
-                    char.LowerTorso.Root:Destroy() -- R15
-                elseif hrp:FindFirstChild("RootJoint") then
-                    hrp.RootJoint:Destroy() -- R6
-                end
-                
+-- הוספת ה-Invisibility כאן
+ExploitsTab:CreateToggle({
+    Name = "Invisibility",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            -- שיטת היעלמות יציבה (Desync)
+            if player.Character and player.Character:FindFirstChild("LowerTorso") then
+                player.Character.LowerTorso.RootGraphic:Destroy()
                 Rayfield:Notify({
-                    Title = "Invisible Mode",
-                    Content = "You are now invisible! Reset character to become visible.",
-                    Duration = 5
+                    Title = "Invisible Enabled",
+                    Content = "You are now invisible to others. (Requires Reset to undo)",
+                    Duration = 4
+                })
+            else
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "Character must be R15 for this method.",
+                    Duration = 3
                 })
             end
-        end)
-    end,
-})
-
-ExploitsTab:CreateSection("Server Utils")
-ExploitsTab:CreateButton({
-    Name = "Anti-AFK (Stay Connected)",
-    Callback = function()
-        local virtualUser = game:GetService("VirtualUser")
-        player.Idled:Connect(function()
-            virtualUser:CaptureController()
-            virtualUser:ClickButton2(Vector2.new())
-        end)
-        Rayfield:Notify({Title = "Anti-AFK", Content = "Enabled", Duration = 2})
+        end
     end,
 })
 
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Fully Loaded with Invisibility!",
+   Content = "Stability Fixed - Invisibility Added.",
    Duration = 5
 })
