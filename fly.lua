@@ -40,7 +40,7 @@ local function updateESPColor()
     end
 end
 
--- Tabs
+-- Tabs (סדר הטאבים נשאר כפי שביקשת)
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals", 4483362458)
@@ -74,7 +74,7 @@ MovementTab:CreateSlider({
       if player.Character then 
          player.Character.Humanoid.UseJumpPower = true
          player.Character.Humanoid.JumpPower = v 
-      end  
+      end 
    end,
 })
 
@@ -178,7 +178,6 @@ VisualsTab:CreateToggle({
 
 -- EXPLOITS
 ExploitsTab:CreateSection("Character Mod")
-
 ExploitsTab:CreateToggle({
    Name = "Noclip",
    CurrentValue = false,
@@ -194,33 +193,8 @@ ExploitsTab:CreateToggle({
    end,
 })
 
--- הוספת ה-Invisibility כאן
-ExploitsTab:CreateToggle({
-    Name = "Invisibility",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then
-            -- שיטת היעלמות יציבה (Desync)
-            if player.Character and player.Character:FindFirstChild("LowerTorso") then
-                player.Character.LowerTorso.RootGraphic:Destroy()
-                Rayfield:Notify({
-                    Title = "Invisible Enabled",
-                    Content = "You are now invisible to others. (Requires Reset to undo)",
-                    Duration = 4
-                })
-            else
-                Rayfield:Notify({
-                    Title = "Error",
-                    Content = "Character must be R15 for this method.",
-                    Duration = 3
-                })
-            end
-        end
-    end,
-})
-
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Stability Fixed - Invisibility Added.",
+   Content = "Stability Fixed - Script won't auto-close.",
    Duration = 5
 })
