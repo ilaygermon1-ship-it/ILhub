@@ -174,23 +174,6 @@ ExploitsTab:CreateToggle({
       end)
    end,
 })
-
--- היעלמות (Invisibility)
-ExploitsTab:CreateButton({
-    Name = "Invisibility (Invisible Mode)",
-    Callback = function()
-        pcall(function()
-            local char = player.Character
-            local root = char:FindFirstChild("LowerTorso") and char.LowerTorso:FindFirstChild("Root") 
-                         or char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart:FindFirstChild("RootJoint")
-            if root then
-                root:Destroy()
-                Rayfield:Notify({Title = "Invisible", Content = "Others can't see you! (Reset to undo)", Duration = 4})
-            end
-        end)
-    end,
-})
-
 -- SCRIPT CONTROL (הטאב עם כפתור המחיקה)
 ControlTab:CreateSection("Danger Zone")
 
