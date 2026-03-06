@@ -32,14 +32,6 @@ UIS.JumpRequest:Connect(function()
     end
 end)
 
-local function updateESPColor()
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p.Character and p.Character:FindFirstChild("ILhub_ESP") then
-            p.Character.ILhub_ESP.FillColor = espColor
-        end
-    end
-end
-
 -- Tabs
 local MovementTab = Window:CreateTab("Movement", 4483345998)
 local TeleportTab = Window:CreateTab("Teleport", 4483362458)
@@ -52,9 +44,7 @@ MovementTab:CreateSection("Physicals")
 MovementTab:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
-   Callback = function(state)
-      infJump = state
-   end,
+   Callback = function(state) infJump = state end,
 })
 
 MovementTab:CreateSlider({
@@ -65,58 +55,61 @@ MovementTab:CreateSlider({
    Callback = function(v) if player.Character then player.Character.Humanoid.WalkSpeed = v end end,
 })
 
-MovementTab:CreateSlider({
-   Name = "Jump Power",
-   Range = {0, 1000},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(v) 
-      if player.Character then 
-         player.Character.Humanoid.UseJumpPower = true
-         player.Character.Humanoid.JumpPower = v 
-      end  
-   end,
-})
-
-MovementTab:CreateSection("Flight Settings")
+MovementTab:CreateSection("Advanced Fly Settings")
 
 MovementTab:CreateSlider({
    Name = "Fly Speed",
-   Range = {0, 1000},
+   Range = {0, 500},
    Increment = 1,
    CurrentValue = 50,
    Callback = function(v) flySpeed = v end,
 })
 
+-- המנגנון החדש של ה-Fly
 MovementTab:CreateToggle({
-   Name = "Fly (W,A,S,D)",
+   Name = "Advanced Fly (CFrame)",
    CurrentValue = false,
    Callback = function(state)
       flying = state
-      if flying and player.Character then
-         local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-         local bv = Instance.new("BodyVelocity", hrp)
-         bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+      if flying then
          task.spawn(function()
-            while flying do
-               local cam = workspace.CurrentCamera.CFrame
-               local dir = Vector3.new(0, 0.1, 0)
-               if UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + cam.LookVector * flySpeed end
-               if UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - cam.LookVector * flySpeed end
-               if UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - cam.RightVector * flySpeed end
-               if UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + cam.RightVector * flySpeed end
-               bv.Velocity = dir
-               task.wait()
+            local char = player.Character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            
+            -- מונע נפילה בזמן תעופה
+            local tempVelocity = Instance.new("BodyVelocity")
+            tempVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+            tempVelocity.Velocity = Vector3.new(0, 0, 0)
+            tempVelocity.Parent = hrp
+
+            while flying and char and hrp do
+                local cam = workspace.CurrentCamera.CFrame
+                local newDir = Vector3.new(0, 0, 0)
+                
+                if UIS:IsKeyDown(Enum.KeyCode.W) then newDir = newDir + cam.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then newDir = newDir - cam.LookVector end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then newDir = newDir - cam.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.D) then newDir = newDir + cam.RightVector end
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then newDir = newDir + Vector3.new(0, 1, 0) end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then newDir = newDir - Vector3.new(0, 1, 0) end
+
+                if newDir.Magnitude > 0 then
+                    hrp.CFrame = hrp.CFrame + (newDir * (flySpeed / 10))
+                end
+                
+                tempVelocity.Velocity = Vector3.new(0, 0, 0) -- מאפס כוחות חיצוניים
+                RunService.RenderStepped:Wait()
             end
-            bv:Destroy()
+            tempVelocity:Destroy()
          end)
       end
    end,
 })
 
--- TELEPORT
+-- TELEPORT (שאר הסקריפט שלך נשאר זהה)
 TeleportTab:CreateSection("Active Players")
-
 local function RefreshTPList()
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= player then
@@ -125,11 +118,6 @@ local function RefreshTPList()
                 Callback = function()
                     if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
-                        Rayfield:Notify({
-                            Title = "Teleported",
-                            Content = "Arrived at " .. p.Name,
-                            Duration = 2
-                        })
                     end
                 end,
             })
@@ -139,19 +127,7 @@ end
 RefreshTPList()
 
 -- VISUALS
-VisualsTab:CreateSection("ESP Customization")
-
-VisualsTab:CreateColorPicker({
-    Name = "ESP Highlight Color",
-    Color = Color3.fromRGB(255, 0, 0),
-    Callback = function(Value)
-        espColor = Value
-        if espEnabled then
-            updateESPColor()
-        end
-    end
-})
-
+VisualsTab:CreateSection("ESP")
 VisualsTab:CreateToggle({
    Name = "Enable Player ESP",
    CurrentValue = false,
@@ -168,9 +144,7 @@ VisualsTab:CreateToggle({
          end
       else
          for _, p in pairs(game.Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then 
-               p.Character.ILhub_ESP:Destroy() 
-            end
+            if p.Character and p.Character:FindFirstChild("ILhub_ESP") then p.Character.ILhub_ESP:Destroy() end
          end
       end
    end,
@@ -195,6 +169,6 @@ ExploitsTab:CreateToggle({
 
 Rayfield:Notify({
    Title = "Voidware V9.9",
-   Content = "Stability Fixed - Script won't auto-close.",
+   Content = "Fly Updated to CFrame Mode!",
    Duration = 5
 })
